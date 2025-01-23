@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <!-- 언더스코어 표기법을 CamelCase로 매핑 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- JDBC 드라이버가 반환하는 키를 자동으로 매핑 -->
+        <setting name="useGeneratedKeys" value="true"/>
+        <!-- SQL 실행 결과 로그 출력 -->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+</configuration>
