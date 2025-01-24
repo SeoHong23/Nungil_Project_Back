@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
     내용 :  MovieDocument 생성
  */
 
-@Document(collation = "movies")
+@Document(collection = "movies")
 public class MovieDocument {
     @Id
     private String id;
