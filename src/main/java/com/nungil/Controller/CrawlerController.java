@@ -15,6 +15,7 @@ import java.util.Map;
 
 @RestController
 public class CrawlerController {
+    /*
 
     private final MovieService movieService;
 
@@ -27,4 +28,6 @@ public class CrawlerController {
     public Map<String, Object> getMovieDetailsWithOtt(@RequestParam String movieCd) {
         return movieService.getMovieWithOtt(movieCd); // 메서드 이름 확인 후 수정
     }
+    */
+
 }
