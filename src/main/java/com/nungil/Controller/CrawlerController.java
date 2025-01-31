@@ -1,12 +1,11 @@
 package com.nungil.Controller;
 
-import com.nungil.Service.CrawlerService;
+import com.nungil.Service.MovieService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
 /*
     날짜 : 2025.01.22
@@ -18,21 +17,16 @@ import java.util.List;
 public class CrawlerController {
     /*
 
-    private final CrawlerService crawlerService;
+    private final MovieService movieService;
 
-
-    public CrawlerController(CrawlerService crawlerService) {
-        this.crawlerService = crawlerService;
+    // 생성자 이름 수정: CrawlerController
+    public CrawlerController(MovieService movieService) {
+        this.movieService = movieService;
     }
 
-
-    @GetMapping("/api/sitemap-urls")
-    public List<String> getMovieUrls() throws IOException {
-        return crawlerService.getSitemapUrls();
-    }
-    @GetMapping("/api/all-movies")
-    public List<String> getAllMovies() throws IOException {
-        return crawlerService.fetchAllMovie();
+    @GetMapping("/movies/details")
+    public Map<String, Object> getMovieDetailsWithOtt(@RequestParam String movieCd) {
+        return movieService.getMovieWithOtt(movieCd); // 메서드 이름 확인 후 수정
     }
     */
 

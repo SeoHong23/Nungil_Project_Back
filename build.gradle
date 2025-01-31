@@ -38,6 +38,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.seleniumhq.selenium:selenium-java:4.8.0'
     implementation 'io.github.bonigarcia:webdrivermanager:5.5.0'
+    implementation 'org.springframework:spring-web'
+
 
 }
 

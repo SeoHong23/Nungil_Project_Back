@@ -4,7 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.nungil", "config"}) // config 패키지 스캔
 public class NungilBackendApplication {
 
     public static void main(String[] args) {
