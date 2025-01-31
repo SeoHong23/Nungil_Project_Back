@@ -1,7 +1,7 @@
 package com.nungil.Service;
 
-import com.nungil.Document.MovieDocument;
-import com.nungil.Repository.MovieRepository;
+//import com.nungil.Document.MovieDocument;
+//mport com.nungil.Repository.MovieRepository;
 //import org.jsoup.Jsoup;
 //import org.jsoup.nodes.Document;
 //import org.jsoup.select.Elements;
