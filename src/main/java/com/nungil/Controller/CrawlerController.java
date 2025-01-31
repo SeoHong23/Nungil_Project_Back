@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 public class CrawlerController {
+    /*
 
     private final CrawlerService crawlerService;
 
@@ -33,4 +34,6 @@ public class CrawlerController {
     public List<String> getAllMovies() throws IOException {
         return crawlerService.fetchAllMovie();
     }
+    */
+
 }

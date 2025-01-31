@@ -11,4 +11,8 @@
         <!-- SQL 실행 결과 로그 출력 -->
         <setting name="logImpl" value="STDOUT_LOGGING"/>
     </settings>
+
+    <mappers>
+        <mapper resource="mapper/UserMapper.xml"/>
+    </mappers>
 </configuration>
