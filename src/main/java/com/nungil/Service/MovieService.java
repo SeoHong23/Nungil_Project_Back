@@ -1,8 +1,9 @@
 package com.nungil.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nungil.Dto.MovieDto;
+import com.nungil.Document.MovieDocument;
+import com.nungil.Dto.MovieDTO;
+import com.nungil.Repository.Interfaces.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,9 @@ public class MovieService {
 
     @Autowired
     private KinoService kinoService;
+
+    @Autowired
+    MovieRepository movieRepository;
 
     /**
      * 영화 제목을 기반으로 KOBIS API와 키노라이츠를 호출하여 정보를 반환합니다.
@@ -47,34 +51,59 @@ public class MovieService {
         String kobisOpenDate = matchingMovie.path("openDt").asText();
         String kobisDirector = matchingMovie.path("directors").isArray() && matchingMovie.path("directors").size() > 0
                 ? matchingMovie.path("directors").get(0).path("peopleNm").asText()
-                : "정보 없음"; // 감독 이름
-        String kobisGenre = matchingMovie.path("genreAlt").asText(); // 장르
+                : "정보 없음";
+        String kobisGenre = matchingMovie.path("genreAlt").asText();
 
         // 키노라이츠 크롤링
-        List<MovieDto> kinoMovies = kinoService.fetchMoviesByTitle(title, kobisYear);
+        List<MovieDTO> kinoMovies = kinoService.fetchMoviesByTitle(title, kobisYear);
         if (kinoMovies.isEmpty()) {
             result.put("message", "키노라이츠에서 영화 정보를 찾을 수 없습니다.");
             return result;
         }
 
         // KOBIS와 키노라이츠 데이터 비교
-        for (MovieDto kinoMovie : kinoMovies) {
+        for (MovieDTO kinoMovie : kinoMovies) {
             String kinoTitle = kinoMovie.getTitle();
             String kinoOpenDate = kinoMovie.getReleaseDate(); // 예: "2019년 01월 23일"
+            String kinoYear = kinoOpenDate.replaceAll("[^0-9]", "").substring(0, 4); // "2019년 01월 23일" → "2019"
 
-            // 제목과 개봉일 비교
-            if (kobisTitle.equals(kinoTitle) && kobisOpenDate.startsWith(kinoOpenDate.replaceAll("[^0-9]", ""))) {
+            // 제목과 개봉 연도 비교
+            if (kobisTitle.equals(kinoTitle) && isYearMatching(kinoYear, kobisOpenDate, matchingMovie.path("prdtYear").asText())) {
                 // 매칭된 경우 결과 저장
                 result.put("movieCd", matchingMovie.path("movieCd").asText());
                 result.put("movieTitle", kobisTitle);
-                result.put("releaseDate", kobisOpenDate); // 개봉일
-                result.put("director", kobisDirector); // 감독 이름
-                result.put("genre", kobisGenre); // 장르
+                result.put("releaseDate", kobisOpenDate);
+                result.put("director", kobisDirector);
+                result.put("genre", kobisGenre);
+                result.put("ottLinks", kinoMovie.getOttInfo());
+                System.out.println("Result OTT Links: " + result.get("ottLinks"));
 
-                result.put("ottLinks", kinoMovie.getPlatforms());
+                System.out.println("kinoMovie: " + kinoMovie);
+                System.out.println("kinoMovie OTT Info: " + kinoMovie.getOttInfo());
+
+                MovieDocument.OTTInfo ottInfo = new MovieDocument.OTTInfo();
+                if (kinoMovie.getOttInfo() != null) {
+                    System.out.println("OTT Info is not null");
+                    ottInfo.setPlatform(kinoMovie.getOttInfo().get(0).getOttPlatform());
+                    ottInfo.setAvailable(kinoMovie.getOttInfo().get(0).getAvailable());
+                } else {
+                    System.out.println("OTT Info is null, setting default values.");
+                    ottInfo.setPlatform("N/A");
+                    ottInfo.setAvailable(false);
+                }
+
+                MovieDocument movie = new MovieDocument();
+                movie.setTitle(kobisTitle);
+                movie.setReleaseDate(kobisOpenDate);
+                movie.setNation(kinoMovie.getNation());
+                movie.setGenre(kinoMovie.getGenre());
+                movie.setType("");
+                movie.setRuntime(kinoMovie.getRuntime());
+                movie.setOttInfo(ottInfo);
+
+                movieRepository.save(movie);
                 return result;
             }
-
         }
 
         // KOBIS와 키노라이츠 모두에서 매칭 실패
@@ -98,10 +127,10 @@ public class MovieService {
 
             // 제목과 연도 비교
             if (isTitleMatching(inputTitle, kobisTitle) && isYearMatching(inputYear, kobisOpenDate, kobisPrdtYear)) {
-                return movie;
+                return movie; // 매칭된 영화 반환
             }
         }
-        return null;
+        return null; // 매칭 실패
     }
 
     /**
