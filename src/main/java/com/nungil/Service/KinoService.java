@@ -1,7 +1,7 @@
 package com.nungil.Service;
 
 
-import com.nungil.Dto.MovieDto;
+import com.nungil.Dto.MovieDTO;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -18,8 +18,8 @@ import java.util.NoSuchElementException;
 
 @Service
 public class KinoService {
-    public List<MovieDto> fetchMoviesByTitle(String title, String kobisYear) {
-        List<MovieDto> kinoMovies = new ArrayList<>();
+    public List<MovieDTO> fetchMoviesByTitle(String title, String kobisYear) {
+        List<MovieDTO> kinoMovies = new ArrayList<>();
         WebDriver driver = initializeDriver();
 
         try {
@@ -63,7 +63,7 @@ public class KinoService {
         return driver;
     }
 
-    private void processMovieItem(WebElement item, String kobisYear, WebDriver driver, List<MovieDto> kinoMovies) {
+    private void processMovieItem(WebElement item, String kobisYear, WebDriver driver, List<MovieDTO> kinoMovies) {
         try {
             String kinoTitle = getElementText(item, ".metadata__title span");
             String kinoSubtitle = getElementText(item, ".metadata__subtitle span");
@@ -74,8 +74,27 @@ public class KinoService {
             if (kobisYear.equals(kinoYear)) {
                 String detailPageUrl = item.getAttribute("href");
                 System.out.println("상세 페이지 URL: " + detailPageUrl);
-                List<String> ottPlatforms = fetchOTTInfo(detailPageUrl, driver);
-                kinoMovies.add(new MovieDto(kinoTitle, 0.0, kinoYear, ottPlatforms));
+
+                List<MovieDTO.OTTInfo> ottPlatforms = fetchOTTInfo(detailPageUrl, driver);
+                // OTTInfo 객체 생성 및 설정
+                MovieDTO.OTTInfo ottInfo = new MovieDTO.OTTInfo();
+                if (!ottPlatforms.isEmpty()) {
+                    ottInfo.setOttPlatform(ottPlatforms.get(0).getOttPlatform()); // 첫 번째 플랫폼 이름
+                    ottInfo.setAvailable(ottPlatforms.get(0).getAvailable());     // 첫 번째 플랫폼의 사용 가능 여부 설정
+                } else {
+                    ottInfo.setOttPlatform("N/A");
+                    ottInfo.setAvailable(false);
+                }
+
+                // MovieDTO 객체 생성 및 설정
+                MovieDTO movieDTO = new MovieDTO();
+                movieDTO.setTitle(kinoTitle);
+                movieDTO.setReleaseDate(kinoYear);
+                movieDTO.setOttInfo(fetchOTTInfo(detailPageUrl, driver));
+
+                // MovieDTO 리스트에 추가
+                kinoMovies.add(movieDTO);
+
             } else {
                 System.out.println("연도가 일치하지 않음: " + kinoYear);
             }
@@ -99,8 +118,10 @@ public class KinoService {
         return year;
     }
 
-    private List<String> fetchOTTInfo(String detailPageUrl, WebDriver driver) {
-        List<String> ottPlatforms = new ArrayList<>();
+    private List<MovieDTO.OTTInfo> fetchOTTInfo(String detailPageUrl, WebDriver driver) {
+        List<MovieDTO.OTTInfo> ottInfos = new ArrayList<>();
+        System.out.println("fetchOTTInfo() 시작. 반환 값 초기 상태: " + ottInfos);
+
         try {
             driver.get(detailPageUrl);
             System.out.println("OTT 상세 페이지 접근: " + detailPageUrl);
@@ -114,17 +135,26 @@ public class KinoService {
             for (WebElement ottItem : ottItems) {
                 String provider = getElementText(ottItem, "div.provider-info__title span.name");
                 String link = ottItem.getAttribute("href");
+
                 if (!provider.isEmpty() && link != null) {
-                    System.out.println("OTT 플랫폼: " + provider + ", 링크: " + link);
-                    ottPlatforms.add(provider + ": " + link);
+                    // ✅ Lombok @AllArgsConstructor 활용
+                    MovieDTO.OTTInfo ottInfo = new MovieDTO.OTTInfo(provider, true, link);
+
+                    ottInfos.add(ottInfo); // 리스트에 추가
+
+                    System.out.println("리스트에 추가된 OTTInfo 객체: " + ottInfo);
                 }
             }
+            System.out.println("최종 ottInfos 리스트 크기: " + ottInfos.size());
+
         } catch (Exception e) {
             System.err.println("OTT 정보를 찾는 중 오류 발생: " + e.getMessage());
             e.printStackTrace();
         }
-        return ottPlatforms;
+        return ottInfos;
     }
+
+
 
     private String getElementText(WebElement element, String cssSelector) {
         try {

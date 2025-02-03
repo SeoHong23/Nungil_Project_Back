@@ -7,7 +7,7 @@ spring:
 
     data:
       mongodb:
-          uri: mongodb://admin:Nungil12!%40@13.239.238.92:27017/ott_crawler
+          uri: mongodb://admin:Nungil12!%40@13.239.238.92:27017/kmdb
 
 server:
     port: 8080

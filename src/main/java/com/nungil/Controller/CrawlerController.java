@@ -1,18 +1,12 @@
 package com.nungil.Controller;
 
-import com.nungil.Dto.MovieDto;
-import com.nungil.Service.KinoService;
-import com.nungil.Service.KobisService;
 import com.nungil.Service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -34,8 +28,9 @@ public class CrawlerController {
      * @return 영화 정보와 OTT 링크
      */
     @GetMapping("/api/movie")
-    public Map<String, Object> getMovie(@RequestParam("title") String title, String kobisYear) {
-        return movieService.getMovieDetails(title, kobisYear);
+    public ResponseEntity<?> getMovie(@RequestParam String title, @RequestParam String kobisYear) {
+        Map<String, Object> movieDetails = movieService.getMovieDetails(title, kobisYear);
+        System.out.println("📢 최종 JSON 응답: " + movieDetails);
+        return ResponseEntity.ok(movieDetails);
     }
-
 }
