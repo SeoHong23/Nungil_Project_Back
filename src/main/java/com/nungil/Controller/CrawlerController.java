@@ -23,7 +23,6 @@ import java.util.Map;
  */
 @RestController
 public class CrawlerController {
-    /*
 
     @Autowired
     private MovieService movieService;
@@ -38,6 +37,5 @@ public class CrawlerController {
     public Map<String, Object> getMovie(@RequestParam("title") String title, String kobisYear) {
         return movieService.getMovieDetails(title, kobisYear);
     }
-    */
 
 }
