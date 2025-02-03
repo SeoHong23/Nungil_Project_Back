@@ -34,3 +34,20 @@ jobs:
           fi
           echo "JAR_FILE=${JAR_FILE}" >> $GITHUB_ENV
           echo "✅ 생성된 JAR 파일: ${JAR_FILE}"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH Key
+        run: |
+          echo "${{ secrets.AWS_EC2_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Restart Spring Application on EC2
+        run: |
+          JAR_FILE=$(basename $(ls build/libs/*.jar | head -n 1))
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            pgrep java | xargs kill -9;
+            nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/$JAR_FILE > app.log 2>&1 &
+          EOF
