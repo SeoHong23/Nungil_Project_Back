@@ -31,3 +31,12 @@ logging:
         com.nungil.repository: DEBUG
 kobis:
   api-key: b6294028408df8733f4113de4cc9f206
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+    endpoint:
+        mappings:
+            enabled: true
