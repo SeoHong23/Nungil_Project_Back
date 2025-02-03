@@ -14,9 +14,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()  // CSRF 보호 비활성화 (필요시 활성화)
                 .authorizeHttpRequests()
-                .requestMatchers("/login", "/register", "/check-email", "/public/**").permitAll()  // 공개 경로
-                .requestMatchers("/api/**").permitAll()  // 공개 경로
-
+                .requestMatchers("/login", "/register", "/check-email","/public/**","/api/**").permitAll()  // 공개 경로
                 .anyRequest().authenticated();  // 인증된 사용자만 접근 가능
 
         return http.build();
