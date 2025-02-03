@@ -13,6 +13,8 @@ server:
     port: 8080
     ssl:
         enabled: false
+    servlet:
+        context-path: /
 
 #    mybatis:
 #        config-location: classpath:mybatis/mybatis-config.xml
