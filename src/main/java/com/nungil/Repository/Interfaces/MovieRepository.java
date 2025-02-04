@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+
 /*
     날짜 : 2025.01.23
     이름 : 박서홍
@@ -16,8 +18,8 @@ import java.util.List;
  */
 @Repository
 public interface MovieRepository extends MongoRepository<MovieDocument, String> {
+    Optional<MovieDocument> findByTitle(String title);
 
-    @Update("{ '$set': { 'ottLinks': ?1 } }")
-    @Query("{'title' :  ?0 }")
-    void updateOttInfoByTitle(String title, List<MovieDocument.OTTInfo> ottInfoList);
+    @Query("{ 'title': { $regex: ?0, $options: 'i' } }") // 대소문자 무시
+    List<MovieDocument> findByTitleRegex(String title);
 }

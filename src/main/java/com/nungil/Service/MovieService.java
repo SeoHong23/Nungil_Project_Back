@@ -1,6 +1,6 @@
 package com.nungil.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.mongodb.client.result.UpdateResult;
 import com.nungil.Document.MovieDocument;
 import com.nungil.Dto.MovieDTO;
 import com.nungil.Repository.Interfaces.MovieRepository;
@@ -9,12 +9,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Update;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,197 +20,177 @@ import java.util.stream.Collectors;
 public class MovieService {
 
     private final MongoTemplate mongoTemplate;
-
+    private final MovieRepository movieRepository;
+    private final KinoService kinoService;
 
     @Autowired
-    public MovieService(MongoTemplate mongoTemplate) {
+    public MovieService(MongoTemplate mongoTemplate, MovieRepository movieRepository,KinoService kinoService) {
         this.mongoTemplate = mongoTemplate;
+        this.movieRepository = movieRepository;
+        this.kinoService = kinoService;
     }
 
-    @Autowired
-    private KobisService kobisService;
 
-    @Autowired
-    private KinoService kinoService;
-
-    @Autowired
-    MovieRepository movieRepository;
+    public MovieDocument findMovieByTitle(String title) {
+        Query query = new Query(Criteria.where("title")
+                .regex("^\\s*" + title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "") + "\\s*$", "i")); // 대소문자 무시
+        return mongoTemplate.findOne(query, MovieDocument.class);
+    }
+    private String normalize(String title) {
+        return title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase();
+    }
 
     /**
-     * 영화 제목을 기반으로 KOBIS API와 키노라이츠를 호출하여 정보를 반환합니다.
-     *
-     * @param title     사용자 입력 영화 제목
-     * @param kobisYear 사용자 입력 연도 (개봉 연도)
-     * @return 영화 정보와 OTT 링크를 포함한 Map
+     * MongoDB에 저장된 영화의 OTT 정보를 업데이트하는 메서드
      */
-    public Map<String, Object> getMovieDetails(String title, String kobisYear) {
+    public Map<String, Object> updateOttInfo(String title) {
         Map<String, Object> result = new HashMap<>();
 
-        // KOBIS API 호출
-        JsonNode movieList = kobisService.getMovieByTitle(title);
-        if (movieList == null || !movieList.isArray() || movieList.isEmpty()) {
-            result.put("message", "KOBIS API에서 검색 결과가 없습니다.");
+        // 1️⃣ MongoDB에서 영화 조회
+        Query query = new Query(Criteria.where("title").regex("^\\s*" + title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "") + "\\s*$", "i"));
+        MovieDocument existingMovie = mongoTemplate.findOne(query, MovieDocument.class);
+
+        if (existingMovie == null) {
+            result.put("message", "해당 영화가 MongoDB에 존재하지 않습니다.");
             return result;
         }
 
-        // KOBIS 응답 데이터 중 입력 값과 가장 유사한 영화 찾기
-        JsonNode matchingMovie = findMatchingKobisMovie(movieList, title, kobisYear);
-        if (matchingMovie == null) {
-            result.put("message", "KOBIS에서 입력 데이터와 일치하는 영화가 없습니다.");
-            return result;
-        }
-
-        // 매칭된 KOBIS 영화 정보
-        String kobisTitle = matchingMovie.path("movieNm").asText();
-        String kobisOpenDate = matchingMovie.path("openDt").asText();
-        String kobisDirector = matchingMovie.path("directors").isArray() && matchingMovie.path("directors").size() > 0
-                ? matchingMovie.path("directors").get(0).path("peopleNm").asText()
-                : "정보 없음";
-        String kobisGenre = matchingMovie.path("genreAlt").asText();
-
-        // 키노라이츠 크롤링
-        List<MovieDTO> kinoMovies = kinoService.fetchMoviesByTitle(title, kobisYear);
+        // 2️⃣ 키노라이츠 크롤링
+        List<MovieDTO> kinoMovies = kinoService.fetchMoviesByTitle(title);
         if (kinoMovies.isEmpty()) {
             result.put("message", "키노라이츠에서 영화 정보를 찾을 수 없습니다.");
             return result;
         }
 
-        // KOBIS와 키노라이츠 데이터 비교
-        for (MovieDTO kinoMovie : kinoMovies) {
-            String kinoTitle = kinoMovie.getTitle();
-            String kinoOpenDate = kinoMovie.getReleaseDate(); // 예: "2019년 01월 23일"
-            String kinoYear = kinoOpenDate.replaceAll("[^0-9]", "").substring(0, 4); // "2019년 01월 23일" → "2019"
+        // 3️⃣ OTT 정보 업데이트
+        MovieDTO matchedMovie = kinoMovies.stream()
+                .filter(kinoMovie -> normalize(kinoMovie.getTitle()).equals(normalize(existingMovie.getTitle())))
+                .findFirst()
+                .orElse(null);
 
-            // 제목과 개봉 연도 비교
-            if (kobisTitle.equals(kinoTitle) && isYearMatching(kinoYear, kobisOpenDate, matchingMovie.path("prdtYear").asText())) {
-                // 매칭된 경우 결과 저장
-                result.put("movieCd", matchingMovie.path("movieCd").asText());
-                result.put("movieTitle", kobisTitle);
-                result.put("releaseDate", kobisOpenDate);
-                result.put("director", kobisDirector);
-                result.put("genre", kobisGenre);
-                result.put("ottLinks", kinoMovie.getOttInfo());
-                System.out.println("Result OTT Links: " + result.get("ottLinks"));
-
-                System.out.println("kinoMovie: " + kinoMovie);
-                System.out.println("kinoMovie OTT Info: " + kinoMovie.getOttInfo());
-
-                List<MovieDocument.OTTInfo> ottInfoList = new ArrayList<>();
-                if (kinoMovie.getOttInfo() != null) {
-                    System.out.println("OTT Info is not null");
-
-                    List<MovieDTO.OTTInfo> dtoOttInfoList = ottInfoList.stream()
-                            .map(ottInfo -> new MovieDTO.OTTInfo(
-                                    ottInfo.getPlatform(),    // MovieDocument.OTTInfo의 필드 매핑
-                                    ottInfo.getAvailable(),
-                                    ottInfo.getLink()
-                            ))
-                            .collect(Collectors.toList());
-
-// 변환된 데이터를 메서드에 전달
-                    updateOTTLinksByTitle(title, dtoOttInfoList);
-                } else {
-                    System.out.println("OTT Info is null, setting default values.");
-
-                    // 기본값 설정 후 업데이트
-                    List<MovieDTO.OTTInfo> defaultOttInfoList = List.of(new MovieDTO.OTTInfo("N/A", false, ""));
-                    updateOTTLinksByTitle(kobisTitle, defaultOttInfoList);
-                }
-
-
-                MovieDocument movie = new MovieDocument();
-                movie.setTitle(kobisTitle);
-                movie.setReleaseDate(kobisOpenDate);
-                movie.setNation(kinoMovie.getNation());
-                movie.setGenre(kinoMovie.getGenre());
-                movie.setType("");
-                movie.setRuntime(kinoMovie.getRuntime());
-                movie.setOttInfo(ottInfoList);
-
-                movieRepository.save(movie);
-                return result;
-            }
+        if (matchedMovie != null) {
+            boolean updateSuccess = updateOTTLinksByTitle(existingMovie.getTitle(), matchedMovie.getOttInfo());
+            result.put("ottInfo", matchedMovie.getOttInfo());
+            result.put("message", updateSuccess ? "OTT 정보가 성공적으로 업데이트되었습니다." : "OTT 정보 업데이트에 실패했습니다.");
+        } else {
+            result.put("message", "키노라이츠와 일치하는 영화 정보를 찾을 수 없습니다.");
+            result.put("kinoTitles", kinoMovies.stream().map(MovieDTO::getTitle).collect(Collectors.toList()));
         }
 
-        // KOBIS와 키노라이츠 모두에서 매칭 실패
-        result.put("message", "키노라이츠와 일치하는 영화 정보를 찾을 수 없습니다.");
         return result;
     }
 
-    /**
-     * KOBIS 응답 데이터에서 입력 제목과 개봉 연도에 가장 유사한 영화 선택.
-     *
-     * @param movieList  KOBIS 응답 영화 목록
-     * @param inputTitle 사용자 입력 영화 제목
-     * @param inputYear  사용자 입력 연도 (개봉 연도)
-     * @return 매칭된 KOBIS 영화 데이터
-     */
-    private JsonNode findMatchingKobisMovie(JsonNode movieList, String inputTitle, String inputYear) {
-        for (JsonNode movie : movieList) {
-            String kobisTitle = movie.path("movieNm").asText();
-            String kobisOpenDate = movie.path("openDt").asText();
-            String kobisPrdtYear = movie.path("prdtYear").asText();
-
-            // 제목과 연도 비교
-            if (isTitleMatching(inputTitle, kobisTitle) && isYearMatching(inputYear, kobisOpenDate, kobisPrdtYear)) {
-                return movie; // 매칭된 영화 반환
-            }
-        }
-        return null; // 매칭 실패
-    }
 
     /**
-     * 영화 제목이 일치하는지 확인 (공백, 특수문자, 대소문자 무시).
-     *
-     * @param inputTitle 사용자 입력 제목
-     * @param kobisTitle KOBIS 영화 제목
-     * @return 제목이 일치하면 true
+     * MongoDB에서 영화 제목이 존재할 경우 OTT 정보를 업데이트
      */
-    private boolean isTitleMatching(String inputTitle, String kobisTitle) {
-        String normalizedInput = inputTitle.replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase();
-        String normalizedKobis = kobisTitle.replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase();
-        return normalizedInput.equals(normalizedKobis);
-    }
+    public boolean updateOTTLinksByTitle(String title, List<MovieDTO.OTTInfo> ottInfoList) {
+        // 제목 정규화 (공백 및 특수문자 제거)
+        String normalizedTitle = title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase();
 
-    /**
-     * 입력 연도와 KOBIS 연도가 일치하는지 확인.
-     *
-     * @param inputYear     사용자 입력 연도
-     * @param kobisOpenDate KOBIS 개봉일
-     * @param kobisPrdtYear KOBIS 제작 연도
-     * @return 연도가 일치하면 true
-     */
-    private boolean isYearMatching(String inputYear, String kobisOpenDate, String kobisPrdtYear) {
-        if (kobisOpenDate != null && !kobisOpenDate.isEmpty()) {
-            return kobisOpenDate.startsWith(inputYear); // 개봉일의 연도 확인
-        }
-        return kobisPrdtYear.equals(inputYear); // 제작 연도로 비교
-    }
+        // MongoDB에서 대소문자 구분 없이 공백 제거 후 제목 검색
+        Query query = new Query(Criteria.where("title")
+                .regex("^\\s*" + normalizedTitle + "\\s*$", "i")); // 대소문자 무시 (i)
 
-    /**
-     * KOBIS 개봉일과 키노라이츠 개봉일이 일치하는지 확인.
-     *
-     * @param kobisOpenDate KOBIS 개봉일 (yyyyMMdd)
-     * @param kinoOpenDate  키노라이츠 개봉일 (예: "2019년 01월 23일")
-     * @return 개봉일이 일치하면 true
-     */
-    private boolean isDateMatching(String kobisOpenDate, String kinoOpenDate) {
-        if (kobisOpenDate == null || kobisOpenDate.isEmpty() || kinoOpenDate == null || kinoOpenDate.isEmpty()) {
+        Update update = new Update().set("ottInfo", convertToMovieDocumentOttInfo(ottInfoList));
+        UpdateResult result = mongoTemplate.updateFirst(query, update, MovieDocument.class);
+
+        if (result.getMatchedCount() > 0) {
+            System.out.println("✅ OTT 정보가 업데이트됨: " + title);
+            return true;
+        } else {
+            System.out.println("🚨 업데이트 실패 (제목 불일치 가능성 있음): " + title);
             return false;
         }
-        String normalizedKinoDate = kinoOpenDate.replaceAll("[^0-9]", ""); // "2019년 01월 23일" -> "20190123"
-        return kobisOpenDate.equals(normalizedKinoDate);
     }
 
-    public void updateOTTLinksByTitle(String title, List<MovieDTO.OTTInfo> ottInfoList) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("title").is(title)); // ✅ 영화 제목으로 기존 데이터 검색
 
-        Update update = new Update().set("ottInfo", ottInfoList); // ✅ ottInfo 필드 업데이트
-
-        // MongoDB 업데이트 실행
-        mongoTemplate.updateFirst(query, update, MovieDocument.class);
-
-        System.out.println("✅ '" + title + "'의 OTT 정보가 성공적으로 업데이트되었습니다.");
+    /**
+     * DTO → MovieDocument의 OTTInfo 변환 메서드
+     */
+    private List<MovieDocument.OTTInfo> convertToMovieDocumentOttInfo(List<MovieDTO.OTTInfo> dtoList) {
+        return dtoList.stream()
+                .map(dto -> new MovieDocument.OTTInfo(dto.getOttPlatform(), dto.getAvailable(), dto.getLink()))
+                .collect(Collectors.toList());
     }
+
+    /**
+     * OTT 정보를 크롤링하여 업데이트 후 반환
+     */
+    private MovieDocument updateOttInfoForMovie(MovieDocument movie) {
+        // 키노라이츠 크롤링
+        List<MovieDTO> kinoMovies = kinoService.fetchMoviesByTitle(movie.getTitle());
+
+        if (!kinoMovies.isEmpty()) {
+            MovieDTO kinoMovie = kinoMovies.get(0); // 첫 번째 크롤링 결과 사용
+
+            // OTT 정보 업데이트
+            updateOTTLinksByTitle(movie.getTitle(), kinoMovie.getOttInfo());
+
+            // 업데이트된 MongoDB 데이터 반환
+            return movieRepository.findByTitle(movie.getTitle()).orElse(movie);
+        }
+
+        return movie; // OTT 정보 없이 반환
+    }
+
+
+
+
+
+
+
+    //    /**
+//     * MongoDB 또는 KOBIS에서 영화 정보를 검색하고, OTT 정보를 업데이트하는 메서드
+//     */
+//    public MovieDocument searchOrFetchMovie(String title) {
+//        // 1️⃣ MongoDB에서 검색
+//        MovieDocument existingMovie = movieRepository.findByTitle(title).orElse(null);
+//        if (existingMovie != null) {
+//            System.out.println("✅ MongoDB에서 데이터를 가져왔습니다: " + title);
+//            return updateOttInfoForMovie(existingMovie); // OTT 정보 업데이트 후 반환
+//        }
+//
+//        // 2️⃣ MongoDB에 없으면 KOBIS에서 가져오기
+//        System.out.println("🚨 MongoDB에 데이터가 없습니다. KOBIS API를 호출합니다: " + title);
+//        MovieDocument movieFromKobis = fetchMovieFromKobis(title);
+//
+//        if (movieFromKobis != null) {
+//            // KOBIS 데이터를 MongoDB에 저장
+//            movieRepository.save(movieFromKobis);
+//            System.out.println("✅ KOBIS에서 데이터를 가져와 MongoDB에 저장했습니다: " + title);
+//            return updateOttInfoForMovie(movieFromKobis); // OTT 정보 업데이트 후 반환
+//        }
+//
+//        // 3️⃣ KOBIS에서도 데이터를 가져오지 못한 경우
+//        System.out.println("🚨 KOBIS에서도 데이터를 찾을 수 없습니다: " + title);
+//        return null;
+//    }
+
+
+
+//    /**
+//     * KOBIS API를 통해 영화 데이터를 가져오는 메서드
+//     */
+//    private MovieDocument fetchMovieFromKobis(String title) {
+//        // KOBIS API 호출
+//        JsonNode movieNode = kobisService.getMovieByTitle(title);
+//
+//        if (movieNode != null && movieNode.size() > 0) {
+//            JsonNode movieData = movieNode.get(0); // 첫 번째 영화 데이터 사용
+//
+//            // KOBIS 데이터를 MovieDocument로 변환
+//            MovieDocument movie = new MovieDocument();
+//            movie.setTitle(movieData.path("movieNm").asText());
+//            movie.setReleaseDate(movieData.path("openDt").asText());
+//            movie.setGenre(List.of(movieData.path("genreAlt").asText().split(",")));
+//            movie.setType("");
+//            movie.setOttInfo(List.of()); // OTT 정보는 크롤링에서 추가
+//            return movie;
+//        }
+//
+//        return null;
+//    }
+
+
 }

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -16,36 +15,56 @@ import java.util.Map;
     내용 : 크롤링 컨트롤러 생성
  */
 @RestController
+@RequestMapping("/api/movie")
 public class CrawlerController {
 
     @Autowired
     private MovieService movieService;
 
     /**
-     * 영화 제목을 검색하여 KOBIS 및 키노라이츠 정보를 반환
-     *
-     * @param title 사용자 입력 영화 제목
-     * @return 영화 정보와 OTT 링크
+     * 제목으로 MongoDB에서 영화 검색 (검색 전용)
      */
-    @GetMapping("/api/movie")
-    public ResponseEntity<?> getMovie(@RequestParam String title, @RequestParam String kobisYear) {
-        Map<String, Object> movieDetails = movieService.getMovieDetails(title, kobisYear);
-        System.out.println("📢 최종 JSON 응답: " + movieDetails);
-        return ResponseEntity.ok(movieDetails);
+    @GetMapping("/search")
+    public ResponseEntity<?> searchMovies(@RequestParam String title) {
+        Map<String, Object> matchingMovies = movieService.updateOttInfo(title);
+
+        if (matchingMovies.isEmpty()) {
+            return ResponseEntity.badRequest().body("🚨 검색 결과가 없습니다.");
+        }
+
+        return ResponseEntity.ok(matchingMovies); // 검색된 영화 리스트 반환
     }
 
-    @PutMapping("/{title}/ott-info")
-    public ResponseEntity<String> updateOttInfo(
-            @PathVariable String title,
-            @RequestBody List<MovieDTO.OTTInfo> ottInfoList
-    ) {
-        // OTT 정보 업데이트 로직
-        System.out.println("Title: " + title);
-        ottInfoList.forEach(ott -> {
-            System.out.println("Platform: " + ott.getOttPlatform());
-            System.out.println("Available: " + ott.getAvailable());
-            System.out.println("Link: " + ott.getLink());
-        });
-        return ResponseEntity.ok("OTT information updated successfully.");
+    /**
+     * ott링크 수동 업데이트
+     */
+    @PutMapping("/ott")
+    public ResponseEntity<String> updateOttInfo(@RequestBody MovieDTO request) {
+        boolean updated = movieService.updateOTTLinksByTitle(request.getTitle(), request.getOttInfo());
+
+        if (updated) {
+            return ResponseEntity.ok("✅ OTT 정보가 성공적으로 업데이트되었습니다: " + request.getTitle());
+        } else {
+            return ResponseEntity.badRequest().body("🚨 업데이트 실패: 해당 영화가 MongoDB에 없습니다.");
+        }
     }
+
+
+    /**
+     * mongodb에서 없을 시 kobisAPI호출해서 검색
+     */
+//    @GetMapping("/total")
+//    public ResponseEntity<?> searchOrFetchMovie(@RequestParam String title) {
+//        MovieDocument movie = movieService.searchOrFetchMovie(title);
+//
+//        if (movie == null) {
+//            return ResponseEntity.badRequest().body("🚨 검색 결과가 없고, KOBIS에서도 데이터를 가져올 수 없습니다.");
+//        }
+//
+//        return ResponseEntity.ok(movie); // 최종 영화 데이터 반환
+//    }
+
 }
+
+
+
