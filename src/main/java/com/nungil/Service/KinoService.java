@@ -18,7 +18,7 @@ import java.util.NoSuchElementException;
 
 @Service
 public class KinoService {
-    public List<MovieDTO> fetchMoviesByTitle(String title, String kobisYear) {
+    public List<MovieDTO> fetchMoviesByTitle(String title) {
         List<MovieDTO> kinoMovies = new ArrayList<>();
         WebDriver driver = initializeDriver();
 
@@ -38,7 +38,7 @@ public class KinoService {
                 try {
                     // 요소를 처리하기 전에 스크롤하여 가시 영역으로 이동
                     ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", item);
-                    processMovieItem(item, kobisYear, driver, kinoMovies);
+                    processMovieItem(item, driver, kinoMovies);
                 } catch (StaleElementReferenceException e) {
                     System.err.println("StaleElementReferenceException 발생, 요소를 건너뜁니다.");
                 }
@@ -63,46 +63,77 @@ public class KinoService {
         return driver;
     }
 
-    private void processMovieItem(WebElement item, String kobisYear, WebDriver driver, List<MovieDTO> kinoMovies) {
-        try {
-            String kinoTitle = getElementText(item, ".metadata__title span");
-            String kinoSubtitle = getElementText(item, ".metadata__subtitle span");
-            String kinoYear = extractYearFromSubtitle(kinoSubtitle);
+//    private void processMovieItem(WebElement item,  WebDriver driver, List<MovieDTO> kinoMovies) {
+//        try {
+//            String kinoTitle = getElementText(item, ".metadata__title span");
+//            String kinoSubtitle = getElementText(item, ".metadata__subtitle span");
+//
+//            String kinoYear = extractYearFromSubtitle(kinoSubtitle);
+//
+//            System.out.println("영화 제목: " + kinoTitle);
+////            System.out.println("영화 제목: " + kinoTitle + ", 개봉 연도: " + kinoYear);
+//            if (kobisYear.equals(kinoYear)) {
+//                String detailPageUrl = item.getAttribute("href");
+//                System.out.println("상세 페이지 URL: " + detailPageUrl);
+//
+//                List<MovieDTO.OTTInfo> ottPlatforms = fetchOTTInfo(detailPageUrl, driver);
+//                // OTTInfo 객체 생성 및 설정
+//                MovieDTO.OTTInfo ottInfo = new MovieDTO.OTTInfo();
+//                if (!ottPlatforms.isEmpty()) {
+//                    ottInfo.setOttPlatform(ottPlatforms.get(0).getOttPlatform()); // 첫 번째 플랫폼 이름
+//                    ottInfo.setAvailable(ottPlatforms.get(0).getAvailable());     // 첫 번째 플랫폼의 사용 가능 여부 설정
+//                } else {
+//                    ottInfo.setOttPlatform("N/A");
+//                    ottInfo.setAvailable(false);
+//                }
+//
+//                // MovieDTO 객체 생성 및 설정
+//                MovieDTO movieDTO = new MovieDTO();
+//                movieDTO.setTitle(kinoTitle);
+////                movieDTO.setReleaseDate(kinoYear);
+//                movieDTO.setOttInfo(fetchOTTInfo(detailPageUrl, driver));
+//
+//                // MovieDTO 리스트에 추가
+//                kinoMovies.add(movieDTO);
+//
+//            } else {
+////                System.out.println("연도가 일치하지 않음: " + kinoYear);
+//            }
+//        } catch (Exception e) {
+//            System.err.println("영화 처리 중 오류 발생: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//    }
 
-            System.out.println("영화 제목: " + kinoTitle + ", 개봉 연도: " + kinoYear);
+private void processMovieItem(WebElement item, WebDriver driver, List<MovieDTO> kinoMovies) {
+    try {
+        String kinoTitle = getElementText(item, ".metadata__title span");
+        String kinoSubtitle = getElementText(item, ".metadata__subtitle span");
+        String kinoYear = extractYearFromSubtitle(kinoSubtitle); // 연도 추출
 
-            if (kobisYear.equals(kinoYear)) {
-                String detailPageUrl = item.getAttribute("href");
-                System.out.println("상세 페이지 URL: " + detailPageUrl);
+        System.out.println("🎬 영화 제목: " + kinoTitle + ", 개봉 연도: " + kinoYear);
 
-                List<MovieDTO.OTTInfo> ottPlatforms = fetchOTTInfo(detailPageUrl, driver);
-                // OTTInfo 객체 생성 및 설정
-                MovieDTO.OTTInfo ottInfo = new MovieDTO.OTTInfo();
-                if (!ottPlatforms.isEmpty()) {
-                    ottInfo.setOttPlatform(ottPlatforms.get(0).getOttPlatform()); // 첫 번째 플랫폼 이름
-                    ottInfo.setAvailable(ottPlatforms.get(0).getAvailable());     // 첫 번째 플랫폼의 사용 가능 여부 설정
-                } else {
-                    ottInfo.setOttPlatform("N/A");
-                    ottInfo.setAvailable(false);
-                }
+        // 영화 상세 페이지 링크 가져오기
+        String detailPageUrl = item.getAttribute("href");
+        System.out.println("🔗 상세 페이지 URL: " + detailPageUrl);
 
-                // MovieDTO 객체 생성 및 설정
-                MovieDTO movieDTO = new MovieDTO();
-                movieDTO.setTitle(kinoTitle);
-                movieDTO.setReleaseDate(kinoYear);
-                movieDTO.setOttInfo(fetchOTTInfo(detailPageUrl, driver));
+        List<MovieDTO.OTTInfo> ottPlatforms = fetchOTTInfo(detailPageUrl, driver);
 
-                // MovieDTO 리스트에 추가
-                kinoMovies.add(movieDTO);
+        // MovieDTO 생성
+        MovieDTO movieDTO = new MovieDTO();
+        movieDTO.setTitle(kinoTitle);
+        movieDTO.setReleaseDate(kinoYear);
+        movieDTO.setOttInfo(ottPlatforms);
 
-            } else {
-                System.out.println("연도가 일치하지 않음: " + kinoYear);
-            }
-        } catch (Exception e) {
-            System.err.println("영화 처리 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-        }
+        kinoMovies.add(movieDTO);
+
+    } catch (Exception e) {
+        System.err.println("❌ 영화 처리 중 오류 발생: " + e.getMessage());
+        e.printStackTrace();
     }
+}
+
+
 
     private String extractYearFromSubtitle(String subtitle) {
         if (subtitle == null || subtitle.isEmpty()) {
