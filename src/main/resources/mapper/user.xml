@@ -5,7 +5,7 @@
 
     <insert id="insertUser">
         INSERT INTO users (email, password, nickname,gender , birth_date)
-        VALUES (#{email}, #{password}, #{nickname},#{gender} , #{birthYear})
+        VALUES (#{email}, #{password}, #{nickname},#{gender} , #{birthDate})
     </insert>
 
 
