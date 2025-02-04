@@ -1,7 +1,9 @@
 spring:
     datasource:
+
 #        url: jdbc:mysql://13.239.238.92:3306/ott_db?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
         url: jdbc:mysql://13.239.238.92:3306/ott_db
+
         username: root
         password: Nungil12!@
         driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,6 +34,7 @@ logging:
         org.apache.ibatis: DEBUG  # MyBatis 로깅 레벨을 DEBUG로 설정하여, 실행되는 SQL 쿼리와 내부 로깅 정보를 콘솔에 출력합니다.
         org.springframework.web: DEBUG  # Spring Web 요청 처리 로그
         com.nungil.repository: DEBUG
+        org.springframework.jdbc.core: DEBUG
 kobis:
   api-key: b6294028408df8733f4113de4cc9f206
 

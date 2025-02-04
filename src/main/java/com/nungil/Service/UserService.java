@@ -1,13 +1,10 @@
 package com.nungil.Service;
 
-import com.nungil.Document.UserDocument;
 import com.nungil.Dto.UserDTO;
 import com.nungil.Enum.Gender;
 import com.nungil.Repository.Interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.sql.Date;
 
 @RequiredArgsConstructor
 @Service
@@ -21,7 +18,7 @@ public class UserService {
     }
 
     // 회원가입
-    public void registerUser(String email, String password, String nickname, Gender gender, int birthYear) {
+    public void registerUser(String email, String password, String nickname, Gender gender, int birthDate) {
         // 이메일 중복 체크
         if (isEmailAlreadyRegistered(email)) {
             throw new IllegalArgumentException("Email is already in use");  // 중복된 이메일 처리
@@ -33,7 +30,7 @@ public class UserService {
         user.setPassword(password);
         user.setNickname(nickname);
         user.setGender(gender);  // gender는 enum으로 설정
-        user.setBirthYear(birthYear);
+        user.setBirthDate(birthDate);
 
         userRepository.insertUser(user);  // 사용자 등록
     }
@@ -57,6 +54,11 @@ public class UserService {
         }
         return false;
     }
+
+    public UserDTO findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
 
 
 }
