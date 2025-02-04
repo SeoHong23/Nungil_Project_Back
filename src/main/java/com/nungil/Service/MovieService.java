@@ -5,14 +5,32 @@ import com.nungil.Document.MovieDocument;
 import com.nungil.Dto.MovieDTO;
 import com.nungil.Repository.Interfaces.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
+
+    private final MongoTemplate mongoTemplate;
+
+
+    @Autowired
+    public MovieService(MongoTemplate mongoTemplate) {
+        this.mongoTemplate = mongoTemplate;
+    }
+
     @Autowired
     private KobisService kobisService;
 
@@ -81,16 +99,28 @@ public class MovieService {
                 System.out.println("kinoMovie: " + kinoMovie);
                 System.out.println("kinoMovie OTT Info: " + kinoMovie.getOttInfo());
 
-                MovieDocument.OTTInfo ottInfo = new MovieDocument.OTTInfo();
+                List<MovieDocument.OTTInfo> ottInfoList = new ArrayList<>();
                 if (kinoMovie.getOttInfo() != null) {
                     System.out.println("OTT Info is not null");
-                    ottInfo.setPlatform(kinoMovie.getOttInfo().get(0).getOttPlatform());
-                    ottInfo.setAvailable(kinoMovie.getOttInfo().get(0).getAvailable());
+
+                    List<MovieDTO.OTTInfo> dtoOttInfoList = ottInfoList.stream()
+                            .map(ottInfo -> new MovieDTO.OTTInfo(
+                                    ottInfo.getPlatform(),    // MovieDocument.OTTInfo의 필드 매핑
+                                    ottInfo.getAvailable(),
+                                    ottInfo.getLink()
+                            ))
+                            .collect(Collectors.toList());
+
+// 변환된 데이터를 메서드에 전달
+                    updateOTTLinksByTitle(title, dtoOttInfoList);
                 } else {
                     System.out.println("OTT Info is null, setting default values.");
-                    ottInfo.setPlatform("N/A");
-                    ottInfo.setAvailable(false);
+
+                    // 기본값 설정 후 업데이트
+                    List<MovieDTO.OTTInfo> defaultOttInfoList = List.of(new MovieDTO.OTTInfo("N/A", false, ""));
+                    updateOTTLinksByTitle(kobisTitle, defaultOttInfoList);
                 }
+
 
                 MovieDocument movie = new MovieDocument();
                 movie.setTitle(kobisTitle);
@@ -99,7 +129,7 @@ public class MovieService {
                 movie.setGenre(kinoMovie.getGenre());
                 movie.setType("");
                 movie.setRuntime(kinoMovie.getRuntime());
-                movie.setOttInfo(ottInfo);
+                movie.setOttInfo(ottInfoList);
 
                 movieRepository.save(movie);
                 return result;
@@ -174,5 +204,17 @@ public class MovieService {
         }
         String normalizedKinoDate = kinoOpenDate.replaceAll("[^0-9]", ""); // "2019년 01월 23일" -> "20190123"
         return kobisOpenDate.equals(normalizedKinoDate);
+    }
+
+    public void updateOTTLinksByTitle(String title, List<MovieDTO.OTTInfo> ottInfoList) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("title").is(title)); // ✅ 영화 제목으로 기존 데이터 검색
+
+        Update update = new Update().set("ottInfo", ottInfoList); // ✅ ottInfo 필드 업데이트
+
+        // MongoDB 업데이트 실행
+        mongoTemplate.updateFirst(query, update, MovieDocument.class);
+
+        System.out.println("✅ '" + title + "'의 OTT 정보가 성공적으로 업데이트되었습니다.");
     }
 }

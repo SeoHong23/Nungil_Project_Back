@@ -1,12 +1,12 @@
 package com.nungil.Controller;
 
+import com.nungil.Dto.MovieDTO;
 import com.nungil.Service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,5 +32,20 @@ public class CrawlerController {
         Map<String, Object> movieDetails = movieService.getMovieDetails(title, kobisYear);
         System.out.println("📢 최종 JSON 응답: " + movieDetails);
         return ResponseEntity.ok(movieDetails);
+    }
+
+    @PutMapping("/{title}/ott-info")
+    public ResponseEntity<String> updateOttInfo(
+            @PathVariable String title,
+            @RequestBody List<MovieDTO.OTTInfo> ottInfoList
+    ) {
+        // OTT 정보 업데이트 로직
+        System.out.println("Title: " + title);
+        ottInfoList.forEach(ott -> {
+            System.out.println("Platform: " + ott.getOttPlatform());
+            System.out.println("Available: " + ott.getAvailable());
+            System.out.println("Link: " + ott.getLink());
+        });
+        return ResponseEntity.ok("OTT information updated successfully.");
     }
 }
