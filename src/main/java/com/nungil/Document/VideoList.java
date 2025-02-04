@@ -13,6 +13,7 @@ public class VideoList {
     private String title;
     private String titleEng;
     private String titleOrg;
+    private String commCode;
     private String prodYear;
     private String nation;
     private List<String> company;
