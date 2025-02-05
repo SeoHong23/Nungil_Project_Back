@@ -25,17 +25,12 @@ public class S3ImageService {
     );
 
     public String processImage(String imageUrl) throws Exception {
-        // 1. 이미지 URL에서 파일명 추출
-        String fileName = extractFileNameFromUrl(imageUrl);
 
-        // 2. S3에서 이미지 다운로드
-        File downloadedFile = downloadImageFromUrl(imageUrl, fileName);
+        String fileName = extractFileNameFromUrl(imageUrl); // 1. 이미지 URL에서 파일명 추출
+        File downloadedFile = downloadImageFromUrl(imageUrl, fileName); // 2. S3에서 이미지 다운로드
+        String uploadedUrl = uploadToS3(downloadedFile, fileName); // 3. 로컬에서 S3로 이미지 업로드
 
-        // 3. 로컬에서 S3로 이미지 업로드
-        String uploadedUrl = uploadToS3(downloadedFile, fileName);
-
-        // 4. 업로드된 이미지의 S3 URL 리턴
-        return uploadedUrl;
+        return uploadedUrl; // 4. 업로드된 이미지의 S3 URL 리턴
     }
 
     private String extractFileNameFromUrl(String imageUrl) {

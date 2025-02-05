@@ -14,6 +14,4 @@ public class AwsS3Properties {
     private String bucketName;
     private String accessKey;
     private String secretKey;
-
-    // Getters and setters
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nungil.Document.PlotDocument;
 import com.nungil.Document.StaffDocument;
 import com.nungil.Document.VideoDocument;
+import lombok.Data;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -82,15 +83,7 @@ public class JsonVideo {
     private CodeWrapper commCodes;
 
     public VideoDocument toVideoDocument() {
-        if(type.equals("애니메이션")) {
-            genre = type+","+genre;
-        }
-        if(genre.contains("코메디")){
-            genre = genre.replaceAll("코메디", "코미디");
-        }
-        if (rating!=null && !rating.equals("")) {
-            genre = genre.replaceAll("세","세 ").replaceAll("관"," 관");
-        }
+        this.transferData();
         return VideoDocument.builder()
                 .commCode(commCodes != null && !commCodes.getCodeList().isEmpty() ? commCodes.getCodeList().get(0).getCodeNo() : null)
                 .title(title)
@@ -125,6 +118,18 @@ public class JsonVideo {
                         .toList() : new ArrayList<>())
                 .build();
     }
+
+    private void transferData(){
+
+        if (type.equals("애니메이션")) genre = type + "," + genre;
+        if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
+        if (rating != null && !rating.equals("")) genre = genre.replaceAll("세", "세 ").replaceAll("관", " 관");
+        if (nation.contains(",")) nation = nation.replaceAll(",", ", ");
+
+        nation = nation.replaceAll("대한민국", "한국");
+    }
+
+
 }
 
 @Getter
@@ -135,7 +140,7 @@ class PlotWrapper {
     private List<Plot> plotList = new ArrayList<>();
 }
 
-@Getter
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Plot {
     @JsonProperty("plotLang")
@@ -146,9 +151,19 @@ class Plot {
 
     PlotDocument toDocument() {
         return PlotDocument.builder()
-                .plotText(plotText)
+                .plotText(transferPlot(plotText))
                 .plotLang(plotLang)
                 .build();
+    }
+    private String transferPlot(String inputText){
+        // 불필요한 문자를 제거하고 단어들 간의 공백을 맞추는 처리
+        inputText = inputText.replaceAll("([!.,?])", "$1 ");
+        inputText = inputText.replaceAll("\\s+", " ").trim();
+
+        // 각종 "도"와 "를" 등의 접속사를 올바르게 처리
+        inputText = inputText.replaceAll("([가-힣])(\\s?)([가-힣])", "$1 $3");
+
+        return inputText;
     }
 }
 

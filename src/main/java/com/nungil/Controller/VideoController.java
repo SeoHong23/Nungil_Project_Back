@@ -2,6 +2,7 @@ package com.nungil.Controller;
 
 import com.nungil.Service.VideoService;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/video")
@@ -42,6 +45,16 @@ public class VideoController {
             logger.error("데이터 저장 중 오류 발생: {}", e.getMessage());
             e.printStackTrace();
             return "데이터 저장 중 오류 발생: " + e.getMessage();
+        }
+    }
+    // JSON 데이터를 외부 API에서 가져와 저장하는 엔드포인트
+    @PostMapping("/fetch-and-save")
+    public String fetchAndSaveData() {
+        try {
+            videoService.saveDataFromApi();
+            return "API 데이터가 성공적으로 저장되었습니다.";
+        } catch (Exception e) {
+            return "API 데이터 저장 중 오류 발생: " + e.getMessage();
         }
     }
 
