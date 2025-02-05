@@ -18,7 +18,7 @@ spring:
 aws:
     s3:
         bucket-name: nungil.file.server
-        access-key: ${AWS_S3_ACCESS_KEY:default_key_if_missing}
+        access-key: AKIAQXUIX56G4ZEWYU56
         secret-key: ${AWS_S3_SECRET_KEY:default_key_if_missing}
         region: ap-northeast-2
 server:
