@@ -38,11 +38,15 @@ dependencies {
     testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'io.github.bonigarcia:webdrivermanager:5.5.0'
+    implementation 'software.amazon.awssdk:s3:2.20.30' // 버전은 최신으로 설정
+    implementation 'software.amazon.awssdk:core:2.20.30'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor' // ConfigurationProperties 사용을 위한 의존성
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     implementation 'org.springframework:spring-web'
     implementation "org.seleniumhq.selenium:selenium-java:4.28.0"
     implementation "org.seleniumhq.selenium:selenium-devtools-v132:4.28.0"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 }
 

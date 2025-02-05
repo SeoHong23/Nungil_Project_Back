@@ -5,10 +5,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface VideoRepository extends MongoRepository<VideoList, String> {
     Optional<VideoList> findByTitle(String title);
     Page<VideoList> findAll(Pageable pageable);
+
     boolean existsById(String id);
+
+    List<VideoList> findByCommCodeIn(List<String> commCodes);
+
 }
