@@ -17,20 +17,14 @@ public class LikesService {
     private final DisLikesRepository disLikesMapper;
     private final VideoRepository videoRepository;
 
-    public void likeVideo(String videoId, Long userId) {
-        log.info("Trying to like video with ID: {}", videoId);
-
-        if (!videoRepository.existsById(videoId)) {
-            log.error("Video with ID {} does not exist!", videoId);
-            throw new IllegalArgumentException("해당 videoId가 존재하지 않습니다.");
+    public boolean likeVideo(String videoId, Long userId) {
+        if (disLikesMapper.existsDislike(videoId, userId) > 0) {
+            return false; // 별로예요가 눌려 있으면 좋아요 불가능
         }
-
         if (likesMapper.existsLike(videoId, userId) == 0) {
             likesMapper.insertLike(videoId, userId);
-            log.info("Like inserted for video ID {} by user {}", videoId, userId);
-        } else {
-            log.warn("User {} already liked video {}", userId, videoId);
         }
+        return true;
     }
 
     public void unlikeVideo(String videoId, Long userId) {
@@ -44,19 +38,14 @@ public class LikesService {
         }
     }
 
-    public void dislikeVideo(String videoId, Long userId) {
-        log.info("Trying to like video with ID: {}", videoId);
-        if (!videoRepository.existsById(videoId)) {
-            log.error("Video with ID {} does not exist!", videoId);
-            throw new IllegalArgumentException("해당 videoId가 존재하지 않습니다.");
+    public boolean dislikeVideo(String videoId, Long userId) {
+        if (likesMapper.existsLike(videoId, userId) > 0) {
+            return false; // 좋아요가 눌려 있으면 별로예요 불가능
         }
-
         if (disLikesMapper.existsDislike(videoId, userId) == 0) {
             disLikesMapper.insertDislike(videoId, userId);
-            log.info("Like inserted for video ID {} by user {}", videoId, userId);
-        } else {
-            log.warn("User {} already liked video {}", userId, videoId);
         }
+        return true;
     }
 
     public void deletedislikeVideo(String videoId, Long userId) {
