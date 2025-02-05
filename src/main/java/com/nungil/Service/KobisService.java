@@ -18,7 +18,7 @@ public class KobisService {
 
     private final RestTemplate restTemplate;
 
-    @Value("${kobis.api-key}")
+    @Value("${api.kobis.api-key}")
     private String apiKey;
 
     public KobisService(RestTemplate restTemplate) {
