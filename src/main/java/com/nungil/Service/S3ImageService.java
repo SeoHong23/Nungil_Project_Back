@@ -65,6 +65,7 @@ public class S3ImageService {
         }
         return localFile;
     }
+
     // 확장자를 변경하며 InputStream 찾기
     private InputStream findImageInputStream(String baseUrl) throws Exception {
         for (String extension : POSSIBLE_EXTENSIONS) {

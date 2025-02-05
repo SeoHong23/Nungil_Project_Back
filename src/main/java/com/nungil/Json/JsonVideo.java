@@ -82,6 +82,15 @@ public class JsonVideo {
     private CodeWrapper commCodes;
 
     public VideoDocument toVideoDocument() {
+        if(type.equals("애니메이션")) {
+            genre = type+","+genre;
+        }
+        if(genre.contains("코메디")){
+            genre = genre.replaceAll("코메디", "코미디");
+        }
+        if (rating!=null && !rating.equals("")) {
+            genre = genre.replaceAll("세","세 ").replaceAll("관"," 관");
+        }
         return VideoDocument.builder()
                 .commCode(commCodes != null && !commCodes.getCodeList().isEmpty() ? commCodes.getCodeList().get(0).getCodeNo() : null)
                 .title(title)
