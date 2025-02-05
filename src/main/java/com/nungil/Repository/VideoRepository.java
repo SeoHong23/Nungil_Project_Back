@@ -12,4 +12,5 @@ public interface VideoRepository extends MongoRepository<VideoList, String> {
     Optional<VideoList> findByTitle(String title);
     Page<VideoList> findAll(Pageable pageable);
     List<VideoList> findByCommCodeIn(List<String> commCodes);
+    List<VideoList> findByTitleIn(List<String> titles);
 }
