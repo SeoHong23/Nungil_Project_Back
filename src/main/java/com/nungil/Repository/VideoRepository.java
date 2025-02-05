@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface VideoRepository extends MongoRepository<VideoList, String> {
     Optional<VideoList> findByTitle(String title);
     Page<VideoList> findAll(Pageable pageable);
+    boolean existsById(String id);
 }
