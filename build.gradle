@@ -46,7 +46,7 @@ dependencies {
     implementation "org.seleniumhq.selenium:selenium-java:4.28.0"
     implementation "org.seleniumhq.selenium:selenium-devtools-v132:4.28.0"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 }
 
