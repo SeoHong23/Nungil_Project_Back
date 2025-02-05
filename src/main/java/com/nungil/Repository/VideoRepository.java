@@ -15,5 +15,5 @@ public interface VideoRepository extends MongoRepository<VideoList, String> {
     boolean existsById(String id);
 
     List<VideoList> findByCommCodeIn(List<String> commCodes);
-
+    List<VideoList> findByTitleIn(List<String> titles);
 }

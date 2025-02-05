@@ -27,7 +27,7 @@ public class VideoRankingController {
         if (date == null || date.isEmpty()) {
             date = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         }
-        return videoService.getDailyBoxOffice(date);
+        return videoService.getBoxOffice(date, "daily");
     }
 
     @GetMapping("/weekly")
@@ -49,7 +49,7 @@ public class VideoRankingController {
             formattedDate = lastSunday.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         }
 
-        return videoService.getWeeklyBoxOffice(formattedDate);
+        return videoService.getBoxOffice(formattedDate, "weekly");
     }
 
 
