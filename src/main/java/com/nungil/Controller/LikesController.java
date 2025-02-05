@@ -19,4 +19,10 @@ public class LikesController {
         likesService.likeVideo(videoId, userId);
         return ResponseEntity.ok("Liked");
     }
+
+    @DeleteMapping("/{videoId}/unlike")
+    public ResponseEntity<?> unlikeVideo(@PathVariable String videoId, @RequestParam Long userId) {
+        likesService.unlikeVideo(videoId, userId);
+        return ResponseEntity.ok("Unliked");
+    }
 }
