@@ -63,7 +63,7 @@ public class LikesService {
         log.info("Trying to unlike video ID: {} by user ID: {}", videoId, userId);
 
         if (disLikesMapper.existsDislike(videoId, userId) > 0) {
-            disLikesMapper.existsDislike(videoId, userId);
+            disLikesMapper.deleteDislike(videoId, userId);
             log.info("Like removed for video ID {} by user {}", videoId, userId);
         } else {
             log.warn("User {} has not liked video {}, so nothing to remove", userId, videoId);
