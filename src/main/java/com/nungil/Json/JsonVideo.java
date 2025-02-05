@@ -119,11 +119,14 @@ public class JsonVideo {
                 .build();
     }
 
-    private void transferData(){
+    private void transferData() {
 
         if (type.equals("애니메이션")) genre = type + "," + genre;
         if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
-        if (rating != null && !rating.equals("")) genre = genre.replaceAll("세", "세 ").replaceAll("관", " 관");
+        if (rating != null && !rating.equals("")) {
+            rating = rating.replaceAll("세", "세 ").replaceAll("관", " 관");
+            rating = rating.replaceAll(" {2}", " ");
+        }
         if (nation.contains(",")) nation = nation.replaceAll(",", ", ");
 
         nation = nation.replaceAll("대한민국", "한국");
@@ -155,7 +158,8 @@ class Plot {
                 .plotLang(plotLang)
                 .build();
     }
-    private String transferPlot(String inputText){
+
+    private String transferPlot(String inputText) {
         // 불필요한 문자를 제거하고 단어들 간의 공백을 맞추는 처리
         inputText = inputText.replaceAll("([!.,?])", "$1 ");
         inputText = inputText.replaceAll("\\s+", " ").trim();

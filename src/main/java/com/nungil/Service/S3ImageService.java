@@ -2,8 +2,11 @@ package com.nungil.Service;
 
 import com.nungil.config.AwsS3Properties;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.*;
@@ -17,6 +20,7 @@ public class S3ImageService {
 
     private final S3Client s3Client;
     private final AwsS3Properties awsS3Properties;
+    private final static Logger logger = LoggerFactory.getLogger(S3ImageService.class);
 
     private final String s3Folder = "images/";
 
@@ -90,19 +94,42 @@ public class S3ImageService {
     private String uploadToS3(File file, String fileName) {
         String bucketName = awsS3Properties.getBucketName();
         String region = awsS3Properties.getRegion();
+        String fileKey = s3Folder + fileName;  // S3의 경로 + 파일명
 
-        // S3에 업로드
+        // 1. S3에서 해당 파일이 이미 존재하는지 확인
+        if (isFileExistsInS3(bucketName, fileKey)) {
+            System.out.println("File already exists in S3: "+ fileKey);
+            return buildS3Url(bucketName, region, fileKey);  // 기존 URL 반환
+        }
+
+        // 2. 존재하지 않으면 업로드 진행
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(s3Folder + fileName)  // S3의 경로 + 파일명
-                .contentType("image/jpeg") // 이미지 타입 설정 (필요시 변경)
+                .key(fileKey)
+                .contentType("image/jpeg")
                 .build();
 
         s3Client.putObject(putObjectRequest, file.toPath());
 
-        // 업로드된 이미지의 URL을 리턴
-        return String.format("https://%s.s3.%s.amazonaws.com/%s%s",
-                bucketName, region, s3Folder, fileName);
+        logger.info("File uploaded successfully: {}", fileKey);
+
+        // 3. 업로드된 이미지의 URL을 리턴
+        return buildS3Url(bucketName, region, fileKey);
+    }
+
+    // S3에서 파일 존재 여부 확인
+    private boolean isFileExistsInS3(String bucketName, String fileKey) {
+        try {
+            s3Client.headObject(builder -> builder.bucket(bucketName).key(fileKey).build());
+            return true;  // 파일이 존재하면 true 반환
+        } catch (NoSuchKeyException e) {
+            return false;  // 파일이 존재하지 않으면 false 반환
+        }
+    }
+
+    // S3 URL 생성 헬퍼 메서드
+    private String buildS3Url(String bucketName, String region, String fileKey) {
+        return String.format("https://s3.%s.amazonaws.com/%s/%s", region, bucketName, fileKey);
     }
 
 }
