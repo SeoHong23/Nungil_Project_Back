@@ -1,4 +1,4 @@
-package com.nungil.Config;
+package com.nungil.config;
 
 import lombok.Getter;
 import lombok.Setter;

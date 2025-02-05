@@ -1,6 +1,6 @@
 package com.nungil.Service;
 
-import com.nungil.Config.AwsS3Properties;
+import com.nungil.config.AwsS3Properties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;

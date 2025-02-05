@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -53,11 +52,6 @@ public class VideoService {
     public void processVideoImages(VideoDocument videoDocument) {
         // posters와 stlls 이미지 URL 변경
         videoDocument.changeAllImgUrlHQ(s3ImageService);
-    }
-
-    private MultipartFile convertToMultipartFile(String jsonContent, String filename) throws IOException {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonContent.getBytes());
-        return new MockMultipartFile(filename, filename, "application/json", inputStream);
     }
 
     private List<JsonVideo> loadData(String filePath) throws IOException{
@@ -123,22 +117,30 @@ public class VideoService {
 
     public void saveDataFromApi() throws IOException {
         String apiUrl = this.buildApiUrl();
-        // 외부 API에서 데이터 가져오기
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.getForObject(apiUrl, String.class);
 
-        // JSON 데이터를 MultipartFile로 변환
-        MultipartFile jsonFile = convertToMultipartFile(jsonResponse, "fetchedData.json");
+        // JSON 데이터 바로 처리 (임시 파일 생성 필요 없음)
+        saveDataFromJsonContent(jsonResponse);
+    }
+    public void saveDataFromJsonContent(String jsonContent) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonKMDB json1 = objectMapper.readValue(jsonContent, JsonKMDB.class);
 
-        // 기존 saveData 로직에 전달
-        saveDataFromMultipartFile(jsonFile);
+        List<JsonVideo> data = json1.getData().get(0).getResult();
+        saveDataFromList(data);
     }
 
-    public void saveDataFromMultipartFile(MultipartFile file) throws IOException {
-        File tempFile = File.createTempFile("tempVideoData", ".json");
-        file.transferTo(tempFile);
-        saveData(tempFile.getAbsolutePath());
-        tempFile.delete();
+    private void saveDataFromList(List<JsonVideo> data) {
+        Set<String> existingCommCodes = new HashSet<>(findAllCommCodes());
+        for (JsonVideo video : data) {
+            VideoDocument document = video.toVideoDocument();
+            if (!existingCommCodes.contains(document.getCommCode())) {
+                processVideoImages(document);
+                videoRepository.save(document);
+                existingCommCodes.add(document.getCommCode());
+            }
+        }
     }
 
     public String buildApiUrl() {
