@@ -14,13 +14,15 @@ import java.sql.Date;
 @Getter
 public class UserDTO {
 
+    private int userid;
     private String password;     // 비밀번호
     private String nickname;     // 닉네임
     private String email;        // 이메일
     private int birthDate;    // 생년월일
     private Gender gender;       // 성별
 
-    public UserDTO(String password, String nickname, String email, int birthDate, Gender gender) {
+    public UserDTO(int userid, String password, String nickname, String email, int birthDate, Gender gender) {
+        this.userid = userid;
         this.password = password;
         this.nickname = nickname;
         this.email = email;

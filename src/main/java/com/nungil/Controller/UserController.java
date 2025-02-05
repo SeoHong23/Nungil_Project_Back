@@ -51,6 +51,7 @@ public class UserController {
             log.info("User details: " + user);
 
             response.put("message", "Login successful");
+            response.put("userId", user.getUserid());
             response.put("email", user.getEmail());
             response.put("nickname", user.getNickname());
             response.put("birthYear", user.getBirthDate());

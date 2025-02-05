@@ -17,7 +17,7 @@ import lombok.*;
 public class UserEntity {
 
     @Id
-    private String userid;           // MongoDB에서 사용되는 고유 ID
+    private int userid;           // MongoDB에서 사용되는 고유 ID
     private String password;     // 비밀번호
     private String nickname;     // 닉네임
     private String email;        // 이메일
