@@ -11,4 +11,8 @@
             SELECT COUNT(*) FROM likes WHERE video_id = #{videoId} AND user_id = #{userId};
         </select>
 
+        <delete id="deleteLike">
+            DELETE FROM likes WHERE video_id = #{videoId} AND user_id = #{userId};
+        </delete>
+
     </mapper>
