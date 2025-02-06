@@ -1,9 +1,12 @@
 package com.nungil.Document;
 
+import com.nungil.Dto.StaffDTO;
 import lombok.Builder;
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Getter
 @Builder
 @Document(collection = "staff")
 public class StaffDocument {
@@ -16,5 +19,13 @@ public class StaffDocument {
     private String staffRole;
     private String staffId;
 
-    // 생성자, getter, setter 생략
+    public StaffDTO toDTO() {
+        return StaffDTO.builder()
+                .id(id)
+                .staffNm(staffNm)
+                .staffRoleGroup(staffRoleGroup)
+                .staffRole(staffRole)
+                .staffId(staffId)
+                .build();
+    }
 }

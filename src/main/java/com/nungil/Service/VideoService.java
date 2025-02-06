@@ -2,6 +2,7 @@ package com.nungil.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nungil.Document.VideoDocument;
+import com.nungil.Dto.VideoDTO;
 import com.nungil.Json.JsonKMDB;
 import com.nungil.Json.JsonKMDBData;
 import com.nungil.Json.JsonVideo;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -45,6 +47,14 @@ public class VideoService {
         } catch (Exception e) {
             logger.error("Error during scheduled fetch and save: {}", e.getMessage(), e);
         }
+    }
+
+    public VideoDTO readVideo(String id) {
+        VideoDocument document = videoRepository.findById(id).orElse(null);
+        if (document != null) {
+            return document.toDTO();
+        }
+        return null;
     }
 
     public void processVideoImages(VideoDocument videoDocument) {
