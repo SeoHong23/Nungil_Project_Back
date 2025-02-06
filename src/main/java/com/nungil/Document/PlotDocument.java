@@ -1,6 +1,7 @@
 package com.nungil.Document;
 
 import lombok.Builder;
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,8 +13,9 @@ public class PlotDocument {
     private String id;
 
     private String plotLang;
+
+    @Getter
     private String plotText;
 
-    // 생성자, getter, setter 생략
 }
 
