@@ -100,7 +100,7 @@ public class VideoDocument {
         else if (imgUrl.contains("/thm/02/")) {
             newUrl = imgUrl.replace("/thm/02/", "/" + type + "/");
         }
-        newUrl = newUrl.replace("tn_", "").replace(".jpg", "_01"); // 2. "tn_"을 제거하고 "_01"을 추가
+        newUrl = newUrl.replace("tn_", "").replaceAll("\\.[^.]+$", "_01"); // 2. "tn_"을 제거하고 "_01"을 추가
 
         // 여기에 s3ImageService를 통해 S3 업로드 로직을 처리할 수 있도록 추가
         try {

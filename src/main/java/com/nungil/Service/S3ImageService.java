@@ -25,13 +25,14 @@ public class S3ImageService {
     private final String s3Folder = "images/";
 
     private static final List<String> POSSIBLE_EXTENSIONS = List.of(
-            ".jpg", ".jpeg", ".png", ".gif", ".bmp"
+            ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".jfif",
+            ".svg", ".tiff", ".ico", ".heif", ".heic", ".avif"
     );
 
     public String processImage(String imageUrl) throws Exception {
 
         String fileName = extractFileNameFromUrl(imageUrl); // 1. 이미지 URL에서 파일명 추출
-        File downloadedFile = downloadImageFromUrl(imageUrl, fileName); // 2. S3에서 이미지 다운로드
+        File downloadedFile = downloadImageFromUrl(imageUrl, fileName); // 2. 이미지 다운로드
         String uploadedUrl = uploadToS3(downloadedFile, fileName); // 3. 로컬에서 S3로 이미지 업로드
 
         return uploadedUrl; // 4. 업로드된 이미지의 S3 URL 리턴
@@ -76,7 +77,7 @@ public class S3ImageService {
 
                 // HTTP 200 OK일 경우 InputStream 반환
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    System.out.println("File found: " + fullUrl);
+                    if(!extension.equals(".jpg")) System.out.println("File found: " + fullUrl);
                     return connection.getInputStream();
                 } else {
                     System.out.println("File not found at: " + fullUrl);
@@ -98,7 +99,6 @@ public class S3ImageService {
 
         // 1. S3에서 해당 파일이 이미 존재하는지 확인
         if (isFileExistsInS3(bucketName, fileKey)) {
-            System.out.println("File already exists in S3: "+ fileKey);
             return buildS3Url(bucketName, region, fileKey);  // 기존 URL 반환
         }
 
