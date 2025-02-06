@@ -58,6 +58,13 @@ public class LikesService {
             log.warn("User {} has not liked video {}, so nothing to remove", userId, videoId);
         }
     }
+    public boolean isLiked(String videoId, Long userId) {
+        return likesMapper.existsLike(videoId, userId) > 0;
+    }
+
+    public boolean isDisliked(String videoId, Long userId) {
+        return disLikesMapper.existsDislike(videoId, userId) > 0;
+    }
 
 
 }

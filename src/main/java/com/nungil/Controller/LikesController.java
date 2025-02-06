@@ -6,6 +6,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Log4j2
 @RequiredArgsConstructor
 @RestController
@@ -41,4 +44,18 @@ public class LikesController {
         likesService.deletedislikeVideo(videoId, userId);
         return ResponseEntity.ok("Undisliked");
     }
+
+    @GetMapping("/{videoId}/like-status")
+    public ResponseEntity<?> getLikeStatus(@PathVariable String videoId, @RequestParam Long userId) {
+        boolean isLiked = likesService.isLiked(videoId, userId);
+        boolean isDisliked = likesService.isDisliked(videoId, userId);
+
+        // 좋아요/별로예요 상태를 반환
+        Map<String, Boolean> status = new HashMap<>();
+        status.put("isLiked", isLiked);
+        status.put("isDisliked", isDisliked);
+
+        return ResponseEntity.ok(status);
+    }
+
 }
