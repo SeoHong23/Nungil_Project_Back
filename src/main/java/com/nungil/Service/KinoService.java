@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.NoSuchElementException;
 
+
 @Service
 public class KinoService {
     public List<MovieDTO> fetchMoviesByTitle(String title) {
@@ -31,21 +32,35 @@ public class KinoService {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
             wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("a.content__body")));
 
-            List<WebElement> movieItems = driver.findElements(By.cssSelector("a.content__body"));
-            System.out.println("검색된 영화 수: " + movieItems.size());
+            List<WebElement> movieItems = new WebDriverWait(driver, Duration.ofSeconds(30))
+                    .until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("a.content__body")));
 
-            for (WebElement item : movieItems) {
-                try {
-                    // 요소를 처리하기 전에 스크롤하여 가시 영역으로 이동
-                    ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", item);
-                    processMovieItem(item, driver, kinoMovies);
-                } catch (StaleElementReferenceException e) {
-                    System.err.println("StaleElementReferenceException 발생, 요소를 건너뜁니다.");
+            for (int i = 0; i < movieItems.size(); i++) {
+                boolean success = false;
+                int retryCount = 0;
+
+                while (!success && retryCount < 3) {
+                    try {
+                        WebElement item = new WebDriverWait(driver, Duration.ofSeconds(10))
+                                .until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a.content__body")));
+
+                        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", item);
+                        processMovieItem(item, driver, kinoMovies);
+
+                        success = true;
+
+                    } catch (StaleElementReferenceException | TimeoutException e) {
+                        System.err.println("🚨 요소가 사라졌거나 로딩되지 않음, 다시 찾습니다. (재시도: " + retryCount + ")");
+
+                        movieItems = driver.findElements(By.cssSelector("a.content__body"));
+
+                        retryCount++;
+                    }
                 }
             }
-        } catch (Exception e) {
-            System.err.println("키노라이츠 크롤링 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
+
+
+
         } finally {
             driver.quit();
         }
