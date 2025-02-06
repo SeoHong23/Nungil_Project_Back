@@ -125,7 +125,7 @@ public class JsonVideo {
         if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
         if (rating != null && !rating.equals("")) {
             rating = rating.replaceAll("세", "세 ").replaceAll("관", " 관");
-            rating = rating.replaceAll(" {2}", " ");
+            rating = rating.replaceAll("세  관", "세 이상 관");
         }
         if (nation.contains(",")) nation = nation.replaceAll(",", ", ");
 

@@ -61,20 +61,32 @@ public class VideoService {
 
     public void updateData(String filePath) throws IOException {
         List<JsonVideo> data = loadData(filePath);
-        data.stream().forEach(video -> {
+
+        // 전체 데이터 크기
+        int totalSize = data.size();
+
+        // 진행 상황 출력 (1부터 시작하도록 설정)
+        for (int i = 0; i < totalSize; i++) {
+            JsonVideo video = data.get(i);
             VideoDocument dc = video.toVideoDocument();
+
             Query query = new Query();
-            query.addCriteria(Criteria.where("title").is(dc.getTitle()).and("releaseDate").is(dc.getReleaseDate()));
+            query.addCriteria(Criteria.where("title").is(dc.getTitle()).and("prodYear").is(dc.getProdYear()));
+
+            this.processVideoImages(dc);
 
             // 수정할 내용 정의
             Update update = new Update();
-            update.set("nation", dc.getNation());
-            update.set("plots", dc.getPlots());
-            update.set("rating", dc.getRating());
-            update.set("genre", dc.getGenre());
+            update.set("releaseDate", dc.getReleaseDate());
+            update.set("stlls", dc.getStlls());
+            update.set("posters", dc.getPosters());
 
+            // MongoDB 업데이트
             mongoTemplate.updateMulti(query, update, VideoDocument.class);
-        });
+
+            // 진행 상황 출력
+            System.out.println("Processing " + (i + 1) + " of " + totalSize + " (" + (i + 1) * 100 / totalSize + "%)");
+        }
     }
 
     public void saveData(String filePath) throws IOException {
@@ -111,6 +123,7 @@ public class VideoService {
     private void saveDataFromList(List<JsonVideo> data) {
         Set<String> existingCommCodes = new HashSet<>(findAllCommCodes());
         for (JsonVideo video : data) {
+            if(video.getPosters() == null || video.getPosters().isEmpty()) {continue;}
             VideoDocument document = video.toVideoDocument();
             // commCode가 null이거나 빈 값인 경우 title과 prodYear로 중복 검사
             if (document.getCommCode() == null || document.getCommCode().isEmpty()) {
