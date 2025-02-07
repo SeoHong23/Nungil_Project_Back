@@ -15,12 +15,12 @@ spring:
         multipart:
             max-file-size: 10MB
             max-request-size: 10MB
-aws:
-    s3:
-        bucket-name: nungil.file.server
-        access-key: AKIAQXUIX56G4ZEWYU56
-        secret-key: ${AWS_S3_SECRET_KEY:default_key_if_missing}
-        region: ap-northeast-2
+r2:
+    endpoint: https://417727e547627d7b68d4af33b70de7c1.r2.cloudflarestorage.com
+    bucketName: nungil
+    accessKey: a48aaf0d193b5c910b4c9e3e45d28219
+    secretKey: 92860996217d439307a57fcf1ca68e8c44255622744cb6956cb3d6525b833542
+    publicUrl: https://pub-929f1ad902524142bbef9d16447060e3.r2.dev
 server:
     port: 8080
     ssl:

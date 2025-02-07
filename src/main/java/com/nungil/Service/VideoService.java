@@ -25,14 +25,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class VideoService {
     private final ApiVideoRepository videoRepository;
-    private final S3ImageService s3ImageService;
+    private final R2ImageService r2ImageService;
     private final MongoTemplate mongoTemplate;
     private final static Logger logger = LoggerFactory.getLogger(VideoService.class);
 
@@ -59,44 +58,19 @@ public class VideoService {
 
     public void processVideoImages(VideoDocument videoDocument) {
         // posters와 stlls 이미지 URL 변경
-        videoDocument.changeAllImgUrlHQ(s3ImageService);
+        videoDocument.changeAllImgUrlHQ(r2ImageService);
     }
 
     public List<String> findAllCommCodes() {
         return mongoTemplate.query(VideoDocument.class)
                 .distinct("commCode")
                 .as(String.class)
-                .all(); // 성능 최적화를 위해 페이징을 고려할 수 있음
+                .all();
     }
 
     public void updateData(String filePath) throws IOException {
         List<JsonVideo> data = loadData(filePath);
-
-        // 전체 데이터 크기
-        int totalSize = data.size();
-
-        // 진행 상황 출력 (1부터 시작하도록 설정)
-        for (int i = 0; i < totalSize; i++) {
-            JsonVideo video = data.get(i);
-            VideoDocument dc = video.toVideoDocument();
-
-            Query query = new Query();
-            query.addCriteria(Criteria.where("title").is(dc.getTitle()).and("prodYear").is(dc.getProdYear()));
-
-            this.processVideoImages(dc);
-
-            // 수정할 내용 정의
-            Update update = new Update();
-            update.set("releaseDate", dc.getReleaseDate());
-            update.set("stlls", dc.getStlls());
-            update.set("posters", dc.getPosters());
-
-            // MongoDB 업데이트
-            mongoTemplate.updateMulti(query, update, VideoDocument.class);
-
-            // 진행 상황 출력
-            System.out.println("Processing " + (i + 1) + " of " + totalSize + " (" + (i + 1) * 100 / totalSize + "%)");
-        }
+        updateReleaseDateFromList(data);
     }
 
     public void saveData(String filePath) throws IOException {
@@ -109,7 +83,7 @@ public class VideoService {
         String formattedDate = today.withDayOfMonth(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         return "http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp?" +
-                "collection=kmdb_new2&detail=Y&listCount=500&releaseDts=" + formattedDate +
+                "collection=kmdb_new2&detail=Y&listCount=300&releaseDts=" + formattedDate +
                 "&ServiceKey=" + serviceKey;
     }
 
@@ -122,12 +96,36 @@ public class VideoService {
         saveDataFromJsonContent(jsonResponse);
     }
 
+    private void updateReleaseDateFromList(List<JsonVideo> data) {
+        // 전체 데이터 크기
+        int totalSize = data.size();
+
+        // 진행 상황 출력 (1부터 시작하도록 설정)
+        for (int i = 0; i < totalSize; i++) {
+            JsonVideo video = data.get(i);
+            VideoDocument dc = video.toVideoDocument();
+
+            Query query = new Query();
+            query.addCriteria(Criteria.where("title").is(dc.getTitle()).and("prodYear").is(dc.getProdYear()));
+
+            Update update = new Update();
+            update.set("releaseDate", dc.getReleaseDate());
+            update.set("plots", dc.getPlots());
+
+            mongoTemplate.updateMulti(query, update, VideoDocument.class);
+
+            System.out.println("Processing " + (i + 1) + " of " + totalSize + " (" + (i + 1) * 100 / totalSize + "%)");
+        }
+    }
+
     public void saveDataFromJsonContent(String jsonContent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonKMDB json1 = objectMapper.readValue(jsonContent, JsonKMDB.class);
 
         List<JsonVideo> data = json1.getData().get(0).getResult();
+
         saveDataFromList(data);
+        updateReleaseDateFromList(data);
     }
 
     private void saveDataFromList(List<JsonVideo> data) {
