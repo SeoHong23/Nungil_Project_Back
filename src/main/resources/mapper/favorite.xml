@@ -12,6 +12,12 @@
             DELETE FROM favorites WHERE user_id = #{userId} AND video_id = #{videoId}
         </delete>
 
+        <select id="existsByUserIdAndVideoId" resultType="boolean">
+            SELECT COUNT(1) > 0
+            FROM favorites
+            WHERE user_id = #{userId} AND video_id = #{videoId}
+        </select>
+
 
 
     </mapper>

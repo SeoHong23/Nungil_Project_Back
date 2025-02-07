@@ -10,4 +10,6 @@ public interface FavoritesRepository {
     void insertFavorite(@Param("userId") Long userId, @Param("videoId") String videoId);
 
     void deleteFavorite(@Param("userId") Long userId, @Param("videoId") String videoId);
+
+    boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
 }
