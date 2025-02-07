@@ -95,7 +95,8 @@ public class VideoListService {
         Map<String, String> keyMapping = Map.of(
                 "장르", "genre",
                 "국가", "nation",
-                "연도", "releaseDate"
+                "연도", "releaseDate",
+                "연령등급", "rating"
         );
 
         // ✅ 오늘 날짜를 "yyyyMMdd" 형식으로 변환 (예: 20250205)
