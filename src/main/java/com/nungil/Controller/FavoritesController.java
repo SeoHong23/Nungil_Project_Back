@@ -32,7 +32,7 @@ public class FavoritesController {
     @GetMapping("/favorite/{videoId}/like-status")
     public ResponseEntity<Map<String, Boolean>> getFavoriteStatus(
             @PathVariable String videoId,
-            @PathVariable Long userId) {
+            @RequestParam Long userId) {
 
         boolean isFavorited = favoritesService.isFavorite(userId, videoId);
 
