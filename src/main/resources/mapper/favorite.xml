@@ -8,6 +8,10 @@
             VALUES (#{userId}, #{videoId})
         </select>
 
+        <delete id="deleteFavorite">
+            DELETE FROM favorites WHERE user_id = #{userId} AND video_id = #{videoId}
+        </delete>
+
 
 
     </mapper>
