@@ -8,6 +8,8 @@ import com.nungil.Repository.VideoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,11 +50,35 @@ public class VideoListService {
     public Optional<VideoList> getVideoByTitle(String title) {
         return videoRepository.findByTitle(title);
     }
+    public List<VideoListDTO> getVideoRandom(int size) {
+        return videoRepository.findRandom(size).stream().map(video -> new VideoListDTO(
+                        video.getId(),
+                        video.getTitle(),
+                        (video.getPosters() != null && !video.getPosters().isEmpty()) ? video.getPosters().get(0) : null
+                ))
+                .collect(Collectors.toList());
+    }
 
-    public List<VideoListDTO> getVideosWithPagination(int page, int size) {
-        Page<VideoList> videoPage = videoRepository.findAll(PageRequest.of(page, size));
 
-        return videoPage.getContent().stream()
+    public List<VideoListDTO> getVideosWithPagination(int page, int size, Sort orderBy) {
+
+        Query query = new Query();
+
+        // 🔥 오늘 날짜를 "20250205" 형식으로 변환
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String today = sdf.format(new Date());
+
+
+        query.addCriteria(Criteria.where("releaseDate").lt(today));
+
+        query.with(orderBy);
+
+        List<VideoList> videoList = mongoTemplate.find(query, VideoList.class);
+
+        query.with(PageRequest.of(page, size));
+
+        return videoList.stream()
                 .map(video -> new VideoListDTO(
                         video.getId(),
                         video.getTitle(),
@@ -60,7 +87,8 @@ public class VideoListService {
                 .collect(Collectors.toList());
     }
 
-    public List<VideoListDTO> getVideosWithFilter(int page, int size, Map<String, Set<String>> filters) {
+    public List<VideoListDTO> getVideosWithFilter(int page, int size, Map<String, Set<String>> filters, Sort orderBy) {
+
 
         Query query = new Query();
 
@@ -69,6 +97,11 @@ public class VideoListService {
                 "국가", "nation",
                 "연도", "releaseDate"
         );
+
+        // ✅ 오늘 날짜를 "yyyyMMdd" 형식으로 변환 (예: 20250205)
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String today = sdf.format(new Date());
 
 
         filters.forEach((key, values) -> {
@@ -87,10 +120,12 @@ public class VideoListService {
                 }
             }
         });
+        query.addCriteria(Criteria.where("releaseDate").lt(today));
+
+
+        query.with(orderBy);
 
         query.with(PageRequest.of(page, size));
-
-
 
         List<VideoList> videoList = mongoTemplate.find(query, VideoList.class);
 
