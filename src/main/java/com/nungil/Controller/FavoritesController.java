@@ -19,14 +19,23 @@ public class FavoritesController {
     private final FavoritesService favoritesService;
 
     @PostMapping("/favorite")
-    public void addFavorite(@RequestBody FavoritesDTO dto) {
+    public ResponseEntity<Map<String, String>> addFavorite(@RequestBody FavoritesDTO dto) {
         favoritesService.addFavorite(dto.getUserId(), dto.getVideoId());
+
+        // 성공 메시지를 JSON 형식으로 반환
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "찜 목록에 추가되었습니다.");
+
+        return ResponseEntity.ok(response);  // 200 OK와 함께 JSON 응답 반환
     }
 
+
     @DeleteMapping("/favorite/remove")
-    public String removeFavorite(@RequestBody FavoritesDTO favoritesDTO) {
+    public ResponseEntity<Map<String, String>> removeFavorite(@RequestBody FavoritesDTO favoritesDTO) {
         favoritesService.removeFavorite(favoritesDTO.getUserId(), favoritesDTO.getVideoId());
-        return "찜 목록에서 삭제되었습니다.";
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "찜 목록에서 삭제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/favorite/{videoId}/like-status")
