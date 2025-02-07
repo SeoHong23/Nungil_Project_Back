@@ -1,0 +1,13 @@
+    <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+            "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.nungil.Repository.Interfaces.FavoritesRepository">
+    
+        <select id="insertFavorite">
+            INSERT INTO favorites (user_id, video_id)
+            VALUES (#{userId}, #{videoId})
+        </select>
+
+
+
+    </mapper>
