@@ -8,4 +8,6 @@ import org.apache.ibatis.annotations.Param;
 public interface FavoritesRepository {
 
     void insertFavorite(@Param("userId") Long userId, @Param("videoId") String videoId);
+
+    void deleteFavorite(@Param("userId") Long userId, @Param("videoId") String videoId);
 }

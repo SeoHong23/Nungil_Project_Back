@@ -13,4 +13,9 @@ public class FavoritesService {
     public void addFavorite(Long userId, String videoId) {
         favoritesRepository.insertFavorite(userId, videoId);
     }
+
+    public void removeFavorite(Long userId, String videoId) {
+        favoritesRepository.deleteFavorite(userId, videoId);
+    }
+
 }

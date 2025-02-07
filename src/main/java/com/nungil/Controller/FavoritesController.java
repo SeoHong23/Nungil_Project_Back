@@ -18,4 +18,10 @@ public class FavoritesController {
     public void addFavorite(@RequestBody FavoritesDTO dto) {
         favoritesService.addFavorite(dto.getUserId(), dto.getVideoId());
     }
+
+    @DeleteMapping("/favorite/remove")
+    public String removeFavorite(@RequestBody FavoritesDTO favoritesDTO) {
+        favoritesService.removeFavorite(favoritesDTO.getUserId(), favoritesDTO.getVideoId());
+        return "찜 목록에서 삭제되었습니다.";
+    }
 }
