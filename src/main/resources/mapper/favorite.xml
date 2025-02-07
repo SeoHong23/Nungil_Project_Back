@@ -1,0 +1,23 @@
+    <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+            "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.nungil.Repository.Interfaces.FavoritesRepository">
+    
+        <select id="insertFavorite">
+            INSERT INTO favorites (user_id, video_id)
+            VALUES (#{userId}, #{videoId})
+        </select>
+
+        <delete id="deleteFavorite">
+            DELETE FROM favorites WHERE user_id = #{userId} AND video_id = #{videoId}
+        </delete>
+
+        <select id="existsByUserIdAndVideoId" resultType="boolean">
+            SELECT COUNT(1) > 0
+            FROM favorites
+            WHERE user_id = #{userId} AND video_id = #{videoId}
+        </select>
+
+
+
+    </mapper>

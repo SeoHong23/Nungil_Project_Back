@@ -20,6 +20,6 @@ import java.util.Optional;
 public interface MovieRepository extends MongoRepository<MovieDocument, String> {
     Optional<MovieDocument> findByTitle(String title);
 
-    @Query("{ 'title': { $regex: ?0, $options: 'i' } }") // 대소문자 무시
-    List<MovieDocument> findByTitleRegex(String title);
+//    @Query("{ 'title': { $regex: ?0, $options: 'i' } }") // 대소문자 무시
+//    List<MovieDocument> findByTitleRegex(String title);
 }
