@@ -18,4 +18,8 @@ public class FavoritesService {
         favoritesRepository.deleteFavorite(userId, videoId);
     }
 
+    public boolean isFavorite(Long userId, String videoId) {
+        return favoritesRepository.existsByUserIdAndVideoId(userId, videoId);
+    }
+
 }
