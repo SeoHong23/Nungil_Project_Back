@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -19,6 +20,8 @@ public class MovieDTO {
     private String type;     // 영화 타입
     private String runtime;  // 상영 시간
     private List<OTTInfo> ottInfo; // OTT 정보
+    private boolean isInTheater;  // 🔥 추가: 영화관 상영 여부
+    private List<String> theaterLinks; // 영화관 이름 및 링크
 
     @Data
     @NoArgsConstructor
