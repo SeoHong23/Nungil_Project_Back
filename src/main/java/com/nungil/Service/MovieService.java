@@ -1,9 +1,12 @@
 package com.nungil.Service;
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.Index;
 
 import com.mongodb.client.result.UpdateResult;
 import com.nungil.Document.MovieDocument;
 import com.nungil.Dto.MovieDTO;
 import com.nungil.Repository.Interfaces.MovieRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -30,15 +33,27 @@ public class MovieService {
         this.kinoService = kinoService;
     }
 
+    @PostConstruct
+    public void ensureTextIndex() {
+        // "movie" 컬렉션에 title 필드에 대해 텍스트 인덱스를 생성
+        mongoTemplate.indexOps("movie")
+                .ensureIndex(new Index().on("title", org.springframework.data.domain.Sort.Direction.ASC));
+        System.out.println("✅ title 필드에 텍스트 인덱스가 생성되었습니다.");
+    }
+
 
     public MovieDocument findMovieByTitle(String title) {
         Query query = new Query(Criteria.where("title")
-                .regex("^\\s*" + title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "") + "\\s*$", "i")); // 대소문자 무시
+                .regex(title, "i"));
         return mongoTemplate.findOne(query, MovieDocument.class);
     }
-    private String normalize(String title) {
-        return title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase();
+    private String normalize(String input) {
+        if (input == null) return ""; // Null 처리 추가
+        return input.replaceAll("[^a-zA-Z0-9가-힣]", "")
+        .toLowerCase(); // 공백 및 특수문자 제거
+
     }
+
 
     /**
      * MongoDB에 저장된 영화의 OTT 정보를 업데이트하는 메서드
@@ -48,7 +63,8 @@ public class MovieService {
 
         // 1️⃣ MongoDB에서 영화 조회
         Query query = new Query(Criteria.where("title").regex("^\\s*" + title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "") + "\\s*$", "i"));
-        MovieDocument existingMovie = mongoTemplate.findOne(query, MovieDocument.class);
+//        MovieDocument existingMovie = mongoTemplate.findOne(query, MovieDocument.class);
+        MovieDocument existingMovie = findMovieByTitle(title);
 
         if (existingMovie == null) {
             result.put("message", "해당 영화가 MongoDB에 존재하지 않습니다.");
@@ -133,6 +149,8 @@ public class MovieService {
 
         return movie; // OTT 정보 없이 반환
     }
+
+
 
 
 
