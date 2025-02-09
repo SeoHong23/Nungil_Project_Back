@@ -110,7 +110,6 @@ public class VideoService {
 
             Update update = new Update();
             update.set("releaseDate", dc.getReleaseDate());
-            update.set("plots", dc.getPlots());
 
             mongoTemplate.updateMulti(query, update, VideoDocument.class);
 

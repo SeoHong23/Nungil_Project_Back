@@ -120,7 +120,11 @@ public class JsonVideo {
     }
 
     private void transferData() {
-        title = title.substring(1);
+        title = title.trim();
+        if(titleEng != null) {
+            titleEng = titleEng.replaceAll("\\s?\\([^)]*\\)", "");
+            titleEng = titleEng.trim();
+        }
         if (type.equals("애니메이션")) genre = type + "," + genre;
         if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
         if (rating != null && !rating.equals("")) {
