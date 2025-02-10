@@ -30,7 +30,7 @@ public class VideoDTO {
     private List<String> stlls; // 스틸이미지
     private Map<String,String> directors; // 감독, 각본, 각색
     private List<StaffDTO> cast; // 출연
-    private String makers; // 제작자 투자자 제작사 배급사 수입사
+    private Map<String, String> makers; // 제작자 투자자 제작사 배급사 수입사
     private Map<String,String> crew; // 이외
 
     private String awards1;
