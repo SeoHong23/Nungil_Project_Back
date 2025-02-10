@@ -5,7 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.Date;
 import java.util.List;
 
 /*
@@ -29,6 +31,12 @@ public class MovieDocument {
     private String type;                // 영화 타입 (예: 극장용)
     private String runtime;             // 상영 시간
     private List<OTTInfo> ottInfo;      // OTT 정보
+
+    @Field("isCrawled")
+    private boolean isCrawled = false;  // 기본값: 크롤링되지 않음
+
+    @Field("lastCrawled")
+    private Date lastCrawled; // 마지막 크롤링 시간
 
     @Data
     @NoArgsConstructor

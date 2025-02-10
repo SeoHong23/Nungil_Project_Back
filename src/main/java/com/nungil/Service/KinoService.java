@@ -1,5 +1,6 @@
 package com.nungil.Service;
 
+import com.nungil.Document.MovieDocument;
 import com.nungil.Dto.MovieDTO;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
@@ -7,6 +8,10 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
@@ -18,6 +23,10 @@ import java.util.NoSuchElementException;
 
 @Service
 public class KinoService {
+
+    @Autowired
+    private MongoTemplate mongoTemplate; // ✅ MongoDB 접근 객체
+
     public List<MovieDTO> fetchMoviesByTitle(String title) {
         List<MovieDTO> kinoMovies = new ArrayList<>();
         WebDriver driver = initializeDriver();
@@ -80,6 +89,14 @@ public class KinoService {
 
             MovieDTO movieDTO = new MovieDTO();
 
+            MovieDocument matchedMovie = findMovieByTitleAndYear(kinoTitle, kinoYear);
+            if (matchedMovie == null) {
+                System.out.println("제목과 연도가 일치하는 영화가 없음:" + kinoTitle + "(" + kinoYear + ")");
+                return;
+
+            }
+
+            System.out.println("제목, 연도가 일치하는 영화 발견 : " + matchedMovie.getTitle());
 
             // 영화 상세 페이지 링크 가져오기
             String detailPageUrl = item.getAttribute("href");
@@ -100,6 +117,26 @@ public class KinoService {
         }
     }
 
+    private MovieDocument findMovieByTitleAndYear(String kinoTitle, String kinoYear) {
+
+        Criteria criteria = Criteria.where("title").is(kinoTitle)
+                .and("releaseDate").regex("^" + kinoYear);
+
+
+        Query query = new Query(criteria);
+
+        MovieDocument movie = mongoTemplate.findOne(query, MovieDocument.class);
+
+        if (movie != null) {
+            System.out.println("✅ 일치하는 영화 발견: " + movie.getTitle() + " (" + movie.getReleaseDate() + ")");
+        } else {
+            System.out.println("❌ 제목과 연도가 일치하는 영화가 없음: " + kinoTitle + " (" + kinoYear + ")");
+        }
+        return movie;
+    }
+
+
+
 
     private String extractYearFromSubtitle(String subtitle) {
         if (subtitle == null || subtitle.isEmpty()) {
@@ -117,55 +154,51 @@ public class KinoService {
 
     private List<MovieDTO.OTTInfo> fetchOTTInfo(String detailPageUrl, WebDriver driver, MovieDTO movie) {
         List<MovieDTO.OTTInfo> ottInfos = new ArrayList<>();
+        List<String> theaterLinks = new ArrayList<>(); // 🎟️ 영화 예매 링크 저장
         System.out.println("fetchOTTInfo() 시작. 반환 값 초기 상태: " + ottInfos);
 
         try {
             driver.get(detailPageUrl);
             System.out.println("OTT 상세 페이지 접근: " + detailPageUrl);
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+            // ✅ OTT 정보 크롤링
             List<WebElement> ottItems;
             try {
-                wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.movie-price-link-wrap a.movie-price-link")));
-                ottItems = driver.findElements(By.cssSelector("div.movie-price-link-wrap a.movie-price-link"));
+                ottItems = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.movie-price-link-wrap a.movie-price-link")));
+                System.out.println("OTT 플랫폼 수: " + ottItems.size());
+
+                for (WebElement ottItem : ottItems) {
+                    String provider = getElementText(ottItem, "div.provider-info__title span.name");
+                    String link = ottItem.getAttribute("href");
+
+                    if (!provider.isEmpty() && link != null) {
+                        ottInfos.add(new MovieDTO.OTTInfo(provider, true, link));
+                        System.out.println("OTT 추가됨: " + provider + " - " + link);
+                    }
+                }
             } catch (TimeoutException e) {
                 System.out.println("🚨 OTT 정보 없음: 영화관 상영작이거나 아직 서비스되지 않음.");
-                return Collections.emptyList();
             }
 
-            System.out.println("OTT 플랫폼 수: " + ottItems.size());
-
-            for (WebElement ottItem : ottItems) {
-                String provider = getElementText(ottItem, "div.provider-info__title span.name");
-                String link = ottItem.getAttribute("href");
-
-                if (!provider.isEmpty() && link != null) {
-                    // ✅ Lombok @AllArgsConstructor 활용
-                    MovieDTO.OTTInfo ottInfo = new MovieDTO.OTTInfo(provider, true, link);
-
-                    ottInfos.add(ottInfo); // 리스트에 추가
-
-                    System.out.println("리스트에 추가된 OTTInfo 객체: " + ottInfo);
-                }
+            // ✅ 영화 예매 정보 크롤링 (현재 상영 중 확인)
+            boolean isInTheater = checkIfInTheater(driver);
+            if (isInTheater) {
+                theaterLinks = fetchTheaterInfo(driver);
+                System.out.println("🎟️ 영화관 예매 링크: " + theaterLinks);
             }
-            System.out.println("최종 ottInfos 리스트 크기: " + ottInfos.size());
 
-            if (ottInfos.isEmpty()) {
-                boolean isInTheater = checkIfInTheater(driver);
-                movie.setInTheater(isInTheater);  // DTO에 저장
-                System.out.println("🎬 영화관 상영 여부: " + isInTheater);
-
-                if (isInTheater) {
-                    List<String> theaterLinks = fetchTheaterInfo(driver);
-                    movie.setTheaterLinks(theaterLinks);
-                    System.out.println("🎟️ 영화관 예매 링크: " + theaterLinks);
-                } else {
-                    System.out.println("🚨 영화관 예매 링크를 찾을 수 없습니다.");
-                }
-
+            // 🔥 조건에 따라 데이터 저장
+            if (!theaterLinks.isEmpty()) {
+                movie.setInTheater(true);
+                movie.setTheaterLinks(theaterLinks);
+            } else if (!ottInfos.isEmpty()) {
+                movie.setInTheater(false);
+                movie.setOttInfo(ottInfos);
             } else {
-                System.out.println("🚨 영화관 상영 정보를 확인할 수 없습니다.");
-
+                movie.setInTheater(false);
+                System.out.println("🚨 OTT 정보와 영화관 예매 정보가 없음.");
             }
 
         } catch (Exception e) {
@@ -175,17 +208,16 @@ public class KinoService {
         return ottInfos;
     }
 
+
     private boolean checkIfInTheater(WebDriver driver) {
         try {
             // 영화관 상영 여부 확인
-            WebElement theaterTag = driver.findElement(By.cssSelector("h2.title"));
-            if (theaterTag != null && theaterTag.getText().contains("영화관 상영중")) {
-                return true; // 영화관 상영중이면 true
-            }
+            WebElement theaterContainer = driver.findElement(By.cssSelector("div.movie-current-released"));
+            return theaterContainer != null; // 컨테이너가 존재하면 true
         } catch (NoSuchElementException e) {
-            System.out.println("🎬 영화관 상영 정보 없음.");
+            System.out.println("🎬 '영화관 상영중' 정보 없음.");
+            return false; // 컨테이너가 없으면 false
         }
-        return false; // 아니면 false
     }
 
     private List<String> fetchTheaterInfo(WebDriver driver) {
