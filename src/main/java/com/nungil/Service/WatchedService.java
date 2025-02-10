@@ -15,4 +15,13 @@ public class WatchedService {
     public void addWatched(WatchedDTO watchedDTO) {
         watchedRepository.insertWatched(watchedDTO);
     }
+
+    public void removeWatched(WatchedDTO watchedDTO) {
+        watchedRepository.deleteWatched(watchedDTO);
+    }
+
+    public boolean isWatched(WatchedDTO watchedDTO) {
+        return watchedRepository.existsByUserIdAndVideoId(watchedDTO.getUserId(), watchedDTO.getVideoId());
+    }
+
 }

@@ -8,5 +8,15 @@
             VALUES (#{userId}, #{videoId}, #{createdAt})
         </insert>
 
+        <delete id="deleteWatched">
+            DELETE FROM watched where user_id = #{userId} AND video_id = #{videoId}
+        </delete>
+
+        <select id="existsByUserIdAndVideoId" resultType="boolean">
+            SELECT COUNT(1) > 0
+            FROM watched
+            WHERE user_id = #{userId} AND video_id = #{videoId}
+        </select>
+
 
     </mapper>
