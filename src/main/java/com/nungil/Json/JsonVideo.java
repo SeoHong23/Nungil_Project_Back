@@ -174,10 +174,10 @@ class Plot {
                 .replaceAll("\\{[^}]*\\}", "");
 
         // 문장 부호 뒤에 공백 추가 및 중복 공백 제거
-        inputText = inputText.replaceAll("([!.,?])", "$1 ").replaceAll("\\s+", " ").trim();
+        inputText = inputText.replaceAll("...","…").replaceAll("([!.,?”])", "$1 ").replaceAll("\\s+", " ").trim();
 
         // 조사 앞의 공백 제거 (단, 조사 바로 앞에 한글이 있는 경우만)
-        inputText = inputText.replaceAll("([가-힣])(\\s)([은는도을를이가께의으로])", "$1$3");
+        inputText = inputText.replaceAll("([가-힣])(\\s)([은는도을를이가께의으로에려])", "$1$3");
 
         return inputText;
     }

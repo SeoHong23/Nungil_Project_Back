@@ -134,10 +134,13 @@ public class VideoDocument {
             // 해당 역할을 가진 staff 필터링 후 이름을 쉼표로 연결
             String names = staffs.stream()
                     .filter(staff -> role.equals(staff.getStaffRoleGroup()))  // 역할이 일치하는 staff만 필터링
-                    .map(StaffDocument::getStaffNm)                     // 이름만 추출
-                    .collect(Collectors.joining(", "));                // 쉼표로 연결
+                    .map(StaffDocument::getStaffNm)                           // 이름만 추출
+                    .collect(Collectors.joining(", "));                        // 쉼표로 연결
 
-            directorsMap.put(role, names);
+            // 이름이 있을 경우에만 Map에 추가
+            if (!names.isEmpty()) {
+                directorsMap.put(role, names);
+            }
         }
 
         return directorsMap;
@@ -156,14 +159,25 @@ public class VideoDocument {
         return crewMap;
     }
 
-    private String getMakers() {
-        List<String> targetRoles = List.of("제작자", "투자자", "투자사", "제작사", "배급사", "수입사");
+    private Map<String, String> getMakers() {
 
-        return staffs.stream()
-                .filter(staff -> targetRoles.contains(staff.getStaffRoleGroup()))  // 관심 있는 역할만 필터링
-                .map(staff -> staff.getStaffNm() + "(" + staff.getStaffRoleGroup() + ")") // "이름(역할)" 형식으로 변환
-                .collect(Collectors.joining(", ")); // 쉼표로 연결
+        Map<String, String> makersMap = new HashMap<>();
+        List<String> roles = List.of("제작자", "투자자", "투자사", "제작사", "배급사", "수입사");
 
+        // 각 역할에 대해 반복 처리
+        for (String role : roles) {
+            // 해당 역할을 가진 staff 필터링 후 이름을 쉼표로 연결
+            String names = staffs.stream()
+                    .filter(staff -> role.equals(staff.getStaffRoleGroup()))  // 역할이 일치하는 staff만 필터링
+                    .map(StaffDocument::getStaffNm)                     // 이름만 추출
+                    .collect(Collectors.joining(", "));                // 쉼표로 연결
+
+            if (!names.isEmpty()) {
+                makersMap.put(role, names);
+            }
+        }
+
+        return makersMap;
     }
 
 }
