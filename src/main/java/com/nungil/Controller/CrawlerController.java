@@ -40,7 +40,7 @@ public class CrawlerController {
      */
     @PutMapping("/ott")
     public ResponseEntity<String> updateOttInfo(@RequestBody MovieDTO request) {
-        boolean updated = movieService.updateOTTLinksByTitle(request.getTitle(), request.getOttInfo());
+        boolean updated = movieService.updateOTTLinksByTitle(request.getTitle(), request.getOttInfo(), request.getTheaterLinks());
 
         if (updated) {
             return ResponseEntity.ok("✅ OTT 정보가 성공적으로 업데이트되었습니다: " + request.getTitle());
