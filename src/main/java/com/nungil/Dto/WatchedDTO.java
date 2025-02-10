@@ -15,5 +15,5 @@ public class WatchedDTO {
 
     private Long userId;
     private String videoId;
-    private Date createdAt;
+    private Date createdAt = new Date();
 }
