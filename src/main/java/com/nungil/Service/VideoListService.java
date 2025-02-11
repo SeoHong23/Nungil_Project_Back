@@ -1,5 +1,6 @@
 package com.nungil.Service;
 
+import com.nungil.Document.RankingCacheDocument;
 import com.nungil.Document.VideoList;
 import com.nungil.Dto.KobisResponseDTO;
 import com.nungil.Dto.VideoListDTO;
@@ -31,13 +32,14 @@ public class VideoListService {
     private static final String WEEKLY_URL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchWeeklyBoxOfficeList.json";
 
 
-
+    private final CacheService cacheService;
     private final VideoRepository videoRepository;
     private final MongoTemplate mongoTemplate;
 
-    public VideoListService(VideoRepository videoRepository, RestTemplate restTemplate, MongoTemplate mongoTemplate) {
+    public VideoListService(VideoRepository videoRepository, RestTemplate restTemplate, CacheService cacheService, MongoTemplate mongoTemplate) {
         this.videoRepository = videoRepository;
         this.restTemplate = restTemplate;
+        this.cacheService = cacheService;
         this.mongoTemplate = mongoTemplate;
     }
 
@@ -62,6 +64,8 @@ public class VideoListService {
 
     public List<VideoListDTO> getVideosWithPagination(int page, int size, Sort orderBy) {
 
+        log.info("page : " + page + " size : " + size);
+
         Query query = new Query();
 
         // 🔥 오늘 날짜를 "20250205" 형식으로 변환
@@ -74,9 +78,9 @@ public class VideoListService {
 
         query.with(orderBy);
 
+        query.with(PageRequest.of(page, size));
         List<VideoList> videoList = mongoTemplate.find(query, VideoList.class);
 
-        query.with(PageRequest.of(page, size));
 
         return videoList.stream()
                 .map(video -> new VideoListDTO(
@@ -140,6 +144,14 @@ public class VideoListService {
     }
 
     public List<VideoRankResponseDTO> getBoxOffice(String targetDate, String type) {
+
+        // 캐싱
+        Optional<RankingCacheDocument> cachedData = cacheService.getFromCache(targetDate,type);
+        if (cachedData.isPresent()) {
+            System.out.println("✅ 캐시에서 데이터 반환");
+            return (List<VideoRankResponseDTO>) cachedData.get().getData();
+        }
+
         String url = "";
         if(type.equals("daily")){
             url = UriComponentsBuilder.fromHttpUrl(DAILY_URL)
@@ -194,7 +206,8 @@ public class VideoListService {
                 .collect(Collectors.toMap(VideoList::getTitle, v -> v));
         log.info(dailyBoxOfficeList.toString());
         // 5️⃣ KOBIS 데이터와 MongoDB 데이터 매칭
-        return dailyBoxOfficeList.stream()
+
+        List<VideoRankResponseDTO> result = dailyBoxOfficeList.stream()
                 .map(movie -> {
                     // 1️⃣ 우선 commCode로 매칭
                     VideoList matchedVideo = videoMapByCommCode.get(movie.getMovieCd());
@@ -211,54 +224,14 @@ public class VideoListService {
                                     ? matchedVideo.getPosters().get(0)
                                     : "",
                             movie.getRank(),
-                            movie.getRankInten()
+                            movie.getRankInten(),
+                            movie.getRankOldAndNew()
                     );
                 })
                 .collect(Collectors.toList());
-    }
 
+        cacheService.saveToCache(result, targetDate, type);
 
-
-    public List<VideoRankResponseDTO> getWeeklyBoxOffice(String targetDate) {
-        String url = UriComponentsBuilder.fromHttpUrl(WEEKLY_URL)
-                .queryParam("key", API_KEY)
-                .queryParam("targetDt", targetDate)
-                .queryParam("weekGb", "0")
-                .toUriString();
-
-        KobisResponseDTO response = restTemplate.getForObject(url, KobisResponseDTO.class);
-
-        if (response == null || response.getWeeklyBoxOfficeList() == null) {
-            throw new IllegalStateException("Kobis API 응답이 null이거나 데이터가 없습니다. (targetDate: " + targetDate + ")\n" + url + "\n" + response);
-        }
-
-        List<KobisResponseDTO.MovieInfo> weeklyBoxOfficeList = response.getWeeklyBoxOfficeList();
-        // 2️⃣ MongoDB에서 commCode(영화 코드) 기준으로 매칭되는 데이터 가져오기
-        List<String> movieCodes = weeklyBoxOfficeList.stream()
-                .map(KobisResponseDTO.MovieInfo::getMovieCd)
-                .collect(Collectors.toList());
-
-        List<VideoList> videoList = videoRepository.findByCommCodeIn(movieCodes);
-
-        // 3️⃣ MongoDB 데이터 매핑 (commCode -> VideoList 매핑)
-        Map<String, VideoList> videoMap = videoList.stream()
-                .collect(Collectors.toMap(VideoList::getCommCode, v -> v));
-
-        // 4️⃣ KOBIS 데이터와 MongoDB 데이터 매칭
-        return weeklyBoxOfficeList.stream()
-                .map(movie -> {
-                    VideoList matchedVideo = videoMap.get(movie.getMovieCd());
-
-                    return new VideoRankResponseDTO(
-                            matchedVideo != null ? matchedVideo.getId() : null,
-                            matchedVideo != null ? matchedVideo.getTitle() : movie.getMovieNm(),
-                            matchedVideo != null && matchedVideo.getPosters() != null && !matchedVideo.getPosters().isEmpty()
-                                    ? matchedVideo.getPosters().get(0)
-                                    : "",
-                            movie.getRank(),
-                            movie.getRankInten()
-                    );
-                })
-                .collect(Collectors.toList());
+        return result;
     }
 }

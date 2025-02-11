@@ -55,5 +55,8 @@ public class KobisResponseDTO {
 
         @JsonProperty("rankInten")
         private String rankInten;
+
+        @JsonProperty("rankOldAndNew")
+        private String rankOldAndNew;
     }
 }
