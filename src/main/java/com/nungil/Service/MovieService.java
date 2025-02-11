@@ -37,8 +37,8 @@ public class MovieService {
      * 🕒 저장된 영화 목록을 기반으로 주기적으로 크롤링하여 업데이트
      * - 매일 새벽 3시에 실행
      */
-//    @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시 실행
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시 실행
+//    @Scheduled(fixedRate = 60000)
     public void scheduledMovieUpdate() {
         System.out.println("🚀 [스케줄러] MongoDB 기반 주기적 크롤링 시작...");
 
