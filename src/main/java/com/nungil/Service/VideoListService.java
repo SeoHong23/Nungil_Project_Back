@@ -64,7 +64,6 @@ public class VideoListService {
 
     public List<VideoListDTO> getVideosWithPagination(int page, int size, Sort orderBy) {
 
-        log.info("page : " + page + " size : " + size);
 
         Query query = new Query();
 
@@ -73,12 +72,11 @@ public class VideoListService {
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String today = sdf.format(new Date());
 
-
+        query.with(orderBy.and(Sort.by("_id")));
         query.addCriteria(Criteria.where("releaseDate").lt(today));
 
-        query.with(orderBy);
-
         query.with(PageRequest.of(page, size));
+
         List<VideoList> videoList = mongoTemplate.find(query, VideoList.class);
 
 
@@ -92,8 +90,6 @@ public class VideoListService {
     }
 
     public List<VideoListDTO> getVideosWithFilter(int page, int size, Map<String, Set<String>> filters, Sort orderBy) {
-
-
         Query query = new Query();
 
         Map<String, String> keyMapping = Map.of(
@@ -108,31 +104,47 @@ public class VideoListService {
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String today = sdf.format(new Date());
 
-
+        // ✅ 장르, 국가, 연도, 연령등급 필터 적용
         filters.forEach((key, values) -> {
             String mappedKey = keyMapping.getOrDefault(key, key);
 
             if (!values.isEmpty()) {
-                // ✅ "연도" 필터인 경우, releaseDate의 앞 4자리(YYYY)만 비교하도록 설정
                 if (mappedKey.equals("releaseDate")) {
                     List<Criteria> yearCriterias = values.stream()
-                            .map(year -> Criteria.where("releaseDate").regex("^" + year)) // ✅ 정규식: "YYYY"로 시작하는 값 필터링
+                            .map(year -> Criteria.where("releaseDate").regex("^" + year)) // ✅ 연도 필터링
                             .collect(Collectors.toList());
 
                     query.addCriteria(new Criteria().orOperator(yearCriterias.toArray(new Criteria[0])));
-                } else {
+                } else if(mappedKey.equals("OTT")){
+
+                }
+                else{
                     query.addCriteria(Criteria.where(mappedKey).in(values));
                 }
             }
         });
+
+        // ✅ OTT 필터 적용 (불필요한 "OTT" 필터 제거, "ottInfo.ottPlatform"만 필터링)
+        if (filters.containsKey("OTT")) {
+            Set<String> ottPlatforms = filters.get("OTT");
+            if (ottPlatforms != null && !ottPlatforms.isEmpty()) {
+                query.addCriteria(Criteria.where("ottInfo.ottPlatform").in(ottPlatforms));
+            }
+        }
+
+        // ✅ 개봉일 기준 필터 추가
         query.addCriteria(Criteria.where("releaseDate").lt(today));
 
+        // ✅ 정렬 기준 추가 (id 포함)
+        query.with(orderBy.and(Sort.by("_id")));
 
-        query.with(orderBy);
-
+        // ✅ 페이지네이션 적용
         query.with(PageRequest.of(page, size));
 
+
+        // ✅ MongoDB에서 데이터 조회
         List<VideoList> videoList = mongoTemplate.find(query, VideoList.class);
+
 
         return videoList.stream()
                 .map(video -> new VideoListDTO(
