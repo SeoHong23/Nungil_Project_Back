@@ -13,4 +13,5 @@ public class VideoRankResponseDTO {
     private String poster;
     private String rank;
     private String rankInten;
+    private String rankOldAndNew;
 }
