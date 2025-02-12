@@ -73,7 +73,7 @@ public class VideoListService {
         String today = sdf.format(new Date());
 
         query.with(orderBy.and(Sort.by("_id")));
-        query.addCriteria(Criteria.where("releaseDate").lt(today));
+        query.addCriteria(Criteria.where("releaseDate").lte(today));
 
         query.with(PageRequest.of(page, size));
 
@@ -133,7 +133,7 @@ public class VideoListService {
         }
 
         // ✅ 개봉일 기준 필터 추가
-        query.addCriteria(Criteria.where("releaseDate").lt(today));
+        query.addCriteria(Criteria.where("releaseDate").lte(today));
 
         // ✅ 정렬 기준 추가 (id 포함)
         query.with(orderBy.and(Sort.by("_id")));
