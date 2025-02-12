@@ -18,6 +18,10 @@
             WHERE user_id = #{userId} AND video_id = #{videoId}
         </select>
 
+        <select id="countFavoritesByUser" resultType="long">
+            SELECT COUNT(*) FROM favorites WHERE user_id = #{userId}
+        </select>
+
 
 
     </mapper>

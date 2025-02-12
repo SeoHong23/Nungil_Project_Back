@@ -12,4 +12,6 @@ public interface FavoritesRepository {
     void deleteFavorite(@Param("userId") Long userId, @Param("videoId") String videoId);
 
     boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
+
+    Long countFavoritesByUser(@Param("userId") Long userId);;
 }
