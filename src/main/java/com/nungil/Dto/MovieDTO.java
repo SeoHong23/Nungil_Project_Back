@@ -2,11 +2,15 @@ package com.nungil.Dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -23,7 +27,12 @@ public class MovieDTO {
     private boolean isInTheater;  // 🔥 추가: 영화관 상영 여부
     private List<String> theaterLinks; // 영화관 이름 및 링크
 
+    public List<OTTInfo> getOttInfo() {
+        return ottInfo.stream().map(OTTInfo::transLink).collect(Collectors.toList());
+    }
+
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -31,5 +40,29 @@ public class MovieDTO {
         private String ottPlatform;
         private Boolean available;
         private String link;
+
+        public OTTInfo transLink(){
+            return OTTInfo.builder()
+                    .ottPlatform(ottPlatform)
+                    .available(available)
+                    .link(transformUrl(link))
+                    .build();
+        }
+
+        private static String transformUrl(String inputUrl) {
+            try {
+                // 원본 URL에서 "url=" 이후 값을 추출
+                String encodedUrl = inputUrl.split("url=")[1].split("&")[0];
+
+                // URL 디코딩
+                String decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8);
+
+                // 새로운 파라미터 추가
+                return decodedUrl + "?source=nungil";
+            } catch (Exception e) {
+                e.printStackTrace();
+                return inputUrl;
+            }
+        }
     }
 }
