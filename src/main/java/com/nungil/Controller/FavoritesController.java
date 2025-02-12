@@ -29,6 +29,15 @@ public class FavoritesController {
         return ResponseEntity.ok(response);  // 200 OK와 함께 JSON 응답 반환
     }
 
+    @GetMapping("/favorite/count")
+    public ResponseEntity<Map<String, Long>> getFavoriteCount(@RequestParam Long userId) {
+        Long count = favoritesService.countFavoritesByUser(userId);
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
+    }
+
 
     @DeleteMapping("/favorite/remove")
     public ResponseEntity<Map<String, String>> removeFavorite(@RequestBody FavoritesDTO favoritesDTO) {

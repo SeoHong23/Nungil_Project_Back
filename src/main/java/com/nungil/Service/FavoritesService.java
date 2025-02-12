@@ -22,4 +22,8 @@ public class FavoritesService {
         return favoritesRepository.existsByUserIdAndVideoId(userId, videoId);
     }
 
+    public Long countFavoritesByUser(Long userId) {
+        return favoritesRepository.countFavoritesByUser(userId);
+    }
+
 }
