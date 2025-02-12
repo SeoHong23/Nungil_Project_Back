@@ -47,10 +47,10 @@ public class WatchingController {
         watchingDTO.setUserId(userId);
         watchingDTO.setVideoId(videoId);
 
-        boolean isWatched = watchingService.isWatching(watchingDTO);
+        boolean isWatching = watchingService.isWatching(watchingDTO);
 
         Map<String, Boolean> response = new HashMap<>();
-        response.put("isWatched", isWatched);
+        response.put("isWatching", isWatching);
 
         return ResponseEntity.ok(response);
 
