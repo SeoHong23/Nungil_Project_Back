@@ -1,12 +1,16 @@
 package com.nungil.Document;
 
+import com.nungil.Dto.MovieDTO;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
@@ -39,11 +43,40 @@ public class MovieDocument {
     private Date lastCrawled; // 마지막 크롤링 시간
 
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class OTTInfo {
         private String platform;        // OTT 플랫폼 이름 (예: Netflix, Disney+)
         private Boolean available;      // 해당 OTT에서 사용 가능한지 여부
         private String link;            // 링크 정보
+
+        public OTTInfo transLink(){
+            return OTTInfo.builder()
+                    .platform(platform)
+                    .available(available)
+                    .link(transformUrl(link))
+                    .build();
+        }
+
+        private static String transformUrl(String inputUrl) {
+            try {
+                // 원본 URL에서 "url=" 이후 값을 추출
+                String encodedUrl = inputUrl.split("url=")[1].split("&")[0];
+
+                // URL 디코딩
+                String decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8);
+
+                // 새로운 파라미터 추가
+                if (decodedUrl.contains("?")) {
+                    return decodedUrl + "&source=nungil"; // 이미 ?가 있으면 &로 이어 붙임
+                } else {
+                    return decodedUrl + "?source=nungil"; // ?가 없으면 ?로 시작
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return inputUrl;
+            }
+        }
     }
 }

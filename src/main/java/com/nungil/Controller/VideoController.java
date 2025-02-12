@@ -1,6 +1,7 @@
 package com.nungil.Controller;
 
 import com.nungil.Dto.VideoDTO;
+import com.nungil.Service.MovieService;
 import com.nungil.Service.VideoService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class VideoController {
     private final VideoService videoService;
+    private final MovieService movieService;
     private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
 
     // JSON 파일을 받아 MongoDB에 저장하는 엔드포인트

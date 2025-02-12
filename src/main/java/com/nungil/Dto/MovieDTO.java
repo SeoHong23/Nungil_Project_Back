@@ -58,7 +58,11 @@ public class MovieDTO {
                 String decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8);
 
                 // 새로운 파라미터 추가
-                return decodedUrl + "?source=nungil";
+                if (decodedUrl.contains("?")) {
+                    return decodedUrl + "&source=nungil"; // 이미 ?가 있으면 &로 이어 붙임
+                } else {
+                    return decodedUrl + "?source=nungil"; // ?가 없으면 ?로 시작
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 return inputUrl;
