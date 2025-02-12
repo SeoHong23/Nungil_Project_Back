@@ -36,7 +36,7 @@ public class NotInterestedController {
     }
 
     @GetMapping("/notinterested/{videoId}/status")
-    public ResponseEntity<Map<String ,Boolean >> getnotinterestedstatus
+    public ResponseEntity<Map<String, Boolean>> getnotinterestedstatus
             (@PathVariable String videoId,
              @RequestParam Long userId) {
 
@@ -46,9 +46,10 @@ public class NotInterestedController {
 
         boolean checkNotInterested = notInterestedService.checkNotInterested(notInterestedDTO);
 
-        Map<String ,Boolean> response = new HashMap<>();
+        Map<String, Boolean> response = new HashMap<>();
         response.put("checkNotInterested", checkNotInterested);
 
         return ResponseEntity.ok(response);
     }
+
 }
