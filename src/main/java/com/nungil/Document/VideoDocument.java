@@ -8,6 +8,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,9 @@ public class VideoDocument {
     private String awards1;
     private String awards2;
     private List<String> keywords;
+    private List<MovieDocument.OTTInfo> ottInfo;
+    private boolean isCrawled = false;
+    private Date lastCrawled;
 
     public void changeAllImgUrlHQ(R2ImageService r2ImageService) {
         posters = posters.stream()

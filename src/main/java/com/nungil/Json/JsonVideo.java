@@ -3,11 +3,14 @@ package com.nungil.Json;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hankcs.hanlp.HanLP;
+import com.hankcs.hanlp.seg.common.Term;
 import com.nungil.Document.PlotDocument;
 import com.nungil.Document.StaffDocument;
 import com.nungil.Document.VideoDocument;
 import lombok.Data;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -127,7 +130,7 @@ public class JsonVideo {
         }
         if (type.equals("애니메이션")) genre = type + "," + genre;
         if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
-        if (rating != null && !rating.equals("")) {
+        if (rating != null && !rating.isEmpty()) {
             rating = rating.replaceAll("세", "세 ").replaceAll("관", " 관");
             rating = rating.replaceAll("세  관", "세 이상 관");
         }
@@ -167,19 +170,69 @@ class Plot {
         if (inputText == null || inputText.isEmpty()) {
             return "";
         }
-        // 괄호와 괄호 안 내용을 제거
-        inputText = inputText.replaceAll("\\([^)]*\\)", "")
-                .replaceAll("\\[[^]]*\\]", "")
-                .replaceAll("\"[^\"]*\"", "")
-                .replaceAll("\\{[^}]*\\}", "");
 
-        // 문장 부호 뒤에 공백 추가 및 중복 공백 제거
-        inputText = inputText.replaceAll("...","…").replaceAll("([!.,?”])", "$1 ").replaceAll("\\s+", " ").trim();
+        // 괄호와 괄호 안의 내용을 먼저 제거
+        inputText = removeParentheses(inputText).replaceAll("\\.{3,}","….");
+        // 작은 따옴표와 특수 따옴표를 제거 (안의 내용은 남김)
+        inputText = removeQuotationMarks(inputText);
 
-        // 조사 앞의 공백 제거 (단, 조사 바로 앞에 한글이 있는 경우만)
-        inputText = inputText.replaceAll("([가-힣])(\\s)([은는도을를이가께의으로에려])", "$1$3");
+        final List<String> noSpaceBefore = Arrays.asList(".", ",", "!", "?", "…", ")", "”");
+        final List<String> noSpaceAfter = Arrays.asList("(", "“");
+
+        // HanLP로 토큰화 (각 Term에는 단어 정보가 들어 있음)
+        List<Term> terms = HanLP.segment(inputText);
+        StringBuilder sb = getStringBuilder(terms, noSpaceBefore, noSpaceAfter);
+        // 긴 공백 자르기
+        String result = sb.toString().trim().replaceAll("\\s+", " ");
+        result = result.replaceAll("([.!?])([^\\s])", "$1 $2"); // 문장 부호 뒤에 공백 추가
+
+        return result;
+    }
+
+    private String removeParentheses(String inputText) {
+        if (inputText == null || inputText.isEmpty()) {
+            return "";
+        }
+        // 둥근 괄호 안의 내용 제거
+        inputText = inputText.replaceAll("\\([^)]*\\)", "");
+        // 대괄호 안의 내용 제거
+        inputText = inputText.replaceAll("\\[[^\\]]*\\]", "");
+        // 중괄호 안의 내용 제거
+        inputText = inputText.replaceAll("\\{[^}]*\\}", "");
+        return inputText;
+    }
+
+    // 작은 따옴표, 특수 따옴표 제거 (안의 내용은 그대로 두기)
+    private String removeQuotationMarks(String inputText) {
+        if (inputText == null || inputText.isEmpty()) {
+            return "";
+        }
+
+        inputText = inputText.replaceAll("(?<=\\S)['‘’]+(?=\\S)", ""); // 단어와 단어 사이의 작은 따옴표와 특수 따옴표 제거
+        inputText = inputText.replaceAll("['‘’]+", ""); // 작은 따옴표와 특수 따옴표를 모두 제거
 
         return inputText;
+    }
+
+    @NotNull
+    private static StringBuilder getStringBuilder(List<Term> terms, List<String> noSpaceBefore, List<String> noSpaceAfter) {
+        StringBuilder sb = new StringBuilder();
+        String prev = "";
+
+        for (Term term : terms) {
+            String token = term.word;
+
+            if (!sb.isEmpty() && noSpaceBefore.contains(token)) {
+                sb.append(token);
+            } else {
+                if (!sb.isEmpty() && !noSpaceAfter.contains(prev)) {
+                    sb.append(" ");
+                }
+                sb.append(token);
+            }
+            prev = token;
+        }
+        return sb;
     }
 }
 

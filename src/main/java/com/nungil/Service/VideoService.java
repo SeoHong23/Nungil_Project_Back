@@ -109,6 +109,7 @@ public class VideoService {
             query.addCriteria(Criteria.where("title").is(dc.getTitle()).and("prodYear").is(dc.getProdYear()));
 
             Update update = new Update();
+            update.set("plots", dc.getPlots());
             update.set("releaseDate", dc.getReleaseDate());
 
             mongoTemplate.updateMulti(query, update, VideoDocument.class);
