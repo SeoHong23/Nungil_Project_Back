@@ -2,6 +2,9 @@ package com.nungil.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "notinterested")
@@ -22,6 +25,10 @@ public class NotInterestedEntity {
 
     @Column(name = "video_id", nullable = false)
     private String videoId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private Timestamp createdAt;
 
 
 }
