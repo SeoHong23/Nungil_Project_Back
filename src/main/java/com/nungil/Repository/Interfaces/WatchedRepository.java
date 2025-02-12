@@ -12,4 +12,6 @@ public interface WatchedRepository {
     void deleteWatched(WatchedDTO watchedDTO);
 
     boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
+
+    Long countWatchedByUser(@Param("userId") Long userId);
 }
