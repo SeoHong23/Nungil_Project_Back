@@ -16,7 +16,7 @@ public class NotInterestedDTO {
     private int id;
     private Long userId;
     private String videoId;
-    private Date createdAt;
+    private Date createdAt = new Date();
 
     public NotInterestedDTO(int id, Long userId, String videoId, Date createdAt) {
         this.id = id;
