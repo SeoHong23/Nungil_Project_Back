@@ -24,4 +24,8 @@ public class WatchedService {
         return watchedRepository.existsByUserIdAndVideoId(watchedDTO.getUserId(), watchedDTO.getVideoId());
     }
 
+    public Long countWatchedByUser(Long userId) {
+        return watchedRepository.countWatchedByUser(userId);
+    }
+
 }

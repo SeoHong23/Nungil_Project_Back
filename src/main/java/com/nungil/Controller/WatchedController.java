@@ -28,6 +28,15 @@ public class WatchedController {
 
     }
 
+    @GetMapping("/watched/count")
+    public ResponseEntity<Map<String, Long>> getWatchedCount(@RequestParam Long userId) {
+        Long count = watchedService.countWatchedByUser(userId);
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/watched/remove")
     public ResponseEntity<Map<String, String>> removewatched(@RequestBody WatchedDTO watchedDTO) {
         watchedService.removeWatched(watchedDTO);
