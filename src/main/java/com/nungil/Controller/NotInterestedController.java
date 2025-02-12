@@ -35,7 +35,7 @@ public class NotInterestedController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/notintersted/{videoId}/status")
+    @GetMapping("/notinterested/{videoId}/status")
     public ResponseEntity<Map<String ,Boolean >> getnotinterestedstatus
             (@PathVariable String videoId,
              @RequestParam Long userId) {
