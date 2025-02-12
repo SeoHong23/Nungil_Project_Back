@@ -34,7 +34,7 @@ public class WatchingController {
         watchingService.removeWatching(watchingDTO);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Remove Watched Successfully");
+        response.put("message", "Remove Watching Successfully");
         return ResponseEntity.ok(response);
     }
 
