@@ -13,4 +13,6 @@ public interface WatchingRepository {
     void deleteWatching(WatchingDTO watchingDTO);
 
     boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
+
+    Long countWatchedByUser(@Param("userId") Long userId);
 }
