@@ -1,4 +1,5 @@
 package com.nungil.Service;
+
 import org.springframework.data.mongodb.core.index.Index;
 import com.mongodb.client.result.UpdateResult;
 import com.nungil.Document.MovieDocument;
@@ -13,32 +14,27 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.query.Query;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
+    private static final int PAGE_SIZE = 10;
 
     private final MongoTemplate mongoTemplate;
     private final MovieRepository movieRepository;
     private final KinoService kinoService;
 
     @Autowired
-    public MovieService(MongoTemplate mongoTemplate, MovieRepository movieRepository,KinoService kinoService) {
+    public MovieService(MongoTemplate mongoTemplate, MovieRepository movieRepository, KinoService kinoService) {
         this.mongoTemplate = mongoTemplate;
         this.movieRepository = movieRepository;
         this.kinoService = kinoService;
     }
 
-    /**
-     * 🕒 저장된 영화 목록을 기반으로 주기적으로 크롤링하여 업데이트
-     * - 매일 새벽 3시에 실행
-     */
-    @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시 실행
-//    @Scheduled(fixedRate = 60000)
+//    @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시 실행
+    @Scheduled(fixedRate = 60000)
+
     public void scheduledMovieUpdate() {
         System.out.println("🚀 [스케줄러] MongoDB 기반 주기적 크롤링 시작...");
 
@@ -64,7 +60,7 @@ public class MovieService {
 
                 System.out.println("🔄 업데이트 중: " + movie.getTitle());
 
-                Map<String, Object> updateResult = updateOttInfo(movie.getTitle());
+                Map<String, Object> updateResult = updateOttInfo(movie.getTitle(), page, PAGE_SIZE);
                 boolean success = "OTT 정보가 성공적으로 업데이트되었습니다.".equals(updateResult.get("message"));
 
                 // ✅ 크롤링 성공 시, `isCrawled`와 `lastCrawled` 업데이트
@@ -80,19 +76,46 @@ public class MovieService {
 
         System.out.println("✅ [스케줄러] MongoDB 기반 주기적 크롤링 완료!");
     }
-
-    /**
-     * 특정 페이지에서 영화 목록을 가져오는 메서드
-     */
     private List<MovieDocument> getMoviesFromPage(int page) {
-        // 페이지네이션을 적용하여 가져오기
-        Query query = new Query(Criteria.where("isCrawled").is(false))
-                .limit(100) // 한 페이지당 10개씩 가져오기 (조절 가능)
-                .skip((page - 1) * 10); // 페이지 번호에 맞게 offset 설정
-
+        Query query = new Query(
+                new Criteria().orOperator(
+                        Criteria.where("isCrawled").is(false),
+                        Criteria.where("isCrawled").exists(false)
+                )
+        ).limit(PAGE_SIZE).skip((page - 1) * PAGE_SIZE);
         return mongoTemplate.find(query, MovieDocument.class);
     }
 
+    private boolean isReleaseDateMatch(String dbReleaseDate, String kinoReleaseDate) {
+        String dbYear = extractYear(dbReleaseDate);
+        String kinoYear = extractYear(kinoReleaseDate);
+        return dbYear.equals(kinoYear);
+    }
+
+
+
+    /**
+     * 개봉일에서 연도(YYYY)만 추출하는 메서드
+     */
+    private String extractYear(Object dateInput) {
+        if (dateInput == null) return "";
+
+        String dateStr = String.valueOf(dateInput).trim(); // 공백 제거
+
+        // 4자리 연도만 있는 경우 (ex: "2025")
+        if (dateStr.matches("^\\d{4}$")) {
+            return dateStr;
+        }
+
+        // 8자리 숫자 (YYYYMMDD 형식) → 연도만 추출
+        if (dateStr.matches("^\\d{8}$")) {
+            return dateStr.substring(0, 4);
+        }
+
+        // 정규식을 사용하여 4자리 연도 추출 (문자열 중간 포함 가능)
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\b\\d{4}\\b").matcher(dateStr);
+        return matcher.find() ? matcher.group() : "";
+    }
 
 
     @PostConstruct
@@ -102,30 +125,23 @@ public class MovieService {
         System.out.println("✅ title 필드에 텍스트 인덱스가 생성되었습니다.");
     }
 
-
     public MovieDocument findMovieByTitle(String title) {
-        Query query = new Query(Criteria.where("title")
-                .regex(title, "i"));
+        Query query = new Query(Criteria.where("title").regex(title, "i"));
         return mongoTemplate.findOne(query, MovieDocument.class);
     }
-    private String normalize(String input) {
-        if (input == null) return ""; // Null 처리 추가
-        return input.replaceAll("[^a-zA-Z0-9가-힣]", "")
-        .toLowerCase(); // 공백 및 특수문자 제거
 
+    private String normalize(String input) {
+        if (input == null) return "";
+        // 모든 공백, 특수문자 제거 및 소문자 변환
+        return input.replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase().trim();
     }
 
-
-    /**
-     * MongoDB에 저장된 영화의 OTT 정보를 업데이트하는 메서드
-     */
-    public Map<String, Object> updateOttInfo(String title) {
+    public Map<String, Object> updateOttInfo(String title, int page, int limit) {
         Map<String, Object> result = new HashMap<>();
 
         // 1️⃣ MongoDB에서 영화 조회
         Query query = new Query(Criteria.where("title")
-                        .regex("^\\s*" + title.trim()
-                        .replaceAll("[^a-zA-Z0-9가-힣]", "") + "\\s*$", "i"));
+                .regex("^\\s*" + title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "") + "\\s*$", "i"));
         MovieDocument existingMovie = mongoTemplate.findOne(query, MovieDocument.class);
 
         if (existingMovie == null) {
@@ -140,106 +156,58 @@ public class MovieService {
             return result;
         }
 
-        // 3️⃣ OTT 정보 업데이트
-        MovieDTO matchedMovie = kinoMovies.stream()
-                .filter(kinoMovie -> normalize(kinoMovie.getTitle()).equals(normalize(existingMovie.getTitle())) &&
-                        kinoMovie.getReleaseDate().equals(existingMovie.getReleaseDate())) // 개봉일 비교
-                .findFirst()
-                .orElse(null);
+        for (MovieDTO kinoMovie : kinoMovies) {
+            // **🎯 여기서 제목과 개봉 연도를 비교한 후, 일치하는 경우만 업데이트 진행**
+            if (normalize(kinoMovie.getTitle()).equals(normalize(existingMovie.getTitle()))
+                    && isReleaseDateMatch(existingMovie.getReleaseDate(), kinoMovie.getReleaseDate())) {
 
-        if (matchedMovie != null) {
-            boolean updateSuccess = updateOTTLinksByTitle(existingMovie.getTitle(), matchedMovie.getOttInfo(),  matchedMovie.getTheaterLinks());
+                // OTT 정보 업데이트
+                Update update = new Update();
 
+                // ✅ OTT 정보 업데이트
+                if (!kinoMovie.getOttInfo().isEmpty()) {
+                    List<MovieDocument.OTTInfo> ottInfos = convertToMovieDocumentOttInfo(kinoMovie.getOttInfo());
+                    update.set("ottInfo", ottInfos);
+                }
 
-            result.put("ottInfo", matchedMovie.getOttInfo());
-            result.put("theaterLinks", matchedMovie.getTheaterLinks()); // 영화관 정보 포함
-            result.put("message", updateSuccess ? "OTT 정보가 성공적으로 업데이트되었습니다." : "OTT 정보 업데이트에 실패했습니다.");
-        } else {
-            result.put("message", "키노라이츠와 일치하는 영화 정보를 찾을 수 없습니다.");
-            result.put("kinoTitles", kinoMovies.stream().map(MovieDTO::getTitle).collect(Collectors.toList()));
+                // ✅ 극장 정보 업데이트
+                if (kinoMovie.getTheaterLinks() != null && !kinoMovie.getTheaterLinks().isEmpty()) {
+                    update.set("inTheater", true)
+                            .set("theaterLinks", kinoMovie.getTheaterLinks());
+                }
+
+                // ✅ 크롤링 상태 업데이트
+                update.set("isCrawled", true)
+                        .set("lastCrawled", new Date());
+
+                UpdateResult updateResult = mongoTemplate.updateFirst(query, update, MovieDocument.class);
+
+                boolean success = updateResult.getModifiedCount() > 0;
+                result.put("ottInfo", kinoMovie.getOttInfo());
+                result.put("theaterLinks", kinoMovie.getTheaterLinks());
+                result.put("message", success ? "OTT 정보가 성공적으로 업데이트되었습니다." : "OTT 정보 업데이트에 실패했습니다.");
+
+                if (success) {
+                    System.out.println("✅ DB 업데이트 성공 - " + title);
+                    System.out.println("  - OTT 정보: " + kinoMovie.getOttInfo());
+                    System.out.println("  - 극장 정보: " + kinoMovie.getTheaterLinks());
+                }
+
+                return result; // 하나만 매칭되면 바로 리턴
+            }
         }
 
+        result.put("message", "키노라이츠와 일치하는 영화 정보를 찾을 수 없습니다.");
         return result;
     }
 
-
-    /**
-     * MongoDB에서 영화 제목이 존재할 경우 OTT 정보를 업데이트
-     */
-    public boolean updateOTTLinksByTitle(String title, List<MovieDTO.OTTInfo> ottInfoList, List<String> theaterLinks) {
-        // 제목 정규화
-        String normalizedTitle = title.trim().replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase();
-
-        // MongoDB에서 대소문자 구분 없이 공백 제거 후 제목 검색
-//        Query query = new Query(Criteria.where("title")
-//                .regex("^\\s*" + normalizedTitle + "\\s*$", "i")); // 대소문자 무시 (i)
-//                .regex(normalizedTitle, "i")); // 🔥 부분 일치 검색으로 변경
-        Query query = new Query(Criteria.where("title")
-                .regex(".*" + normalizedTitle + ".*", "i")); // 🔥 부분 일치 검색
-
-//        // 🔥 theaterLinks를 직접 사용하도록 수정
-//        Update update = new Update()
-//                .set("ottInfo", convertToMovieDocumentOttInfo(ottInfoList))
-//                .set("inTheater", theaterLinks != null && !theaterLinks.isEmpty()) // 영화관 상영 여부 설정
-//                .set("theaterLinks", theaterLinks); // 🔥 예매 링크 직접 추가
-
-
-        Update update = new Update();
-
-        // 🎟️ 예매 정보가 있으면 MongoDB에 저장
-        if (!theaterLinks.isEmpty()) {
-            update.set("inTheater", true)
-                    .set("theaterLinks", theaterLinks);
-        }
-
-        // ✅ OTT 정보가 있으면 추가 (예매 정보가 없어도 OTT만 저장 가능)
-        if (!ottInfoList.isEmpty()) {
-            update.set("ottInfo", convertToMovieDocumentOttInfo(ottInfoList));
-        }
-
-
-
-        UpdateResult result = mongoTemplate.updateFirst(query, update, MovieDocument.class);
-
-        System.out.println("🔍 MongoDB 업데이트 결과 - 매칭된 문서 수: " + result.getMatchedCount());
-        System.out.println("🔍 MongoDB 업데이트 결과 - 수정된 문서 수: " + result.getModifiedCount());
-
-        if (result.getMatchedCount() > 0) {
-            System.out.println("✅ OTT 및 영화관 정보가 업데이트됨: " + title);
-            return true;
-        } else {
-            System.out.println("🚨 업데이트 실패 (제목 불일치 가능성 있음): " + title);
-            return false;
-        }
-    }
-
-
-    /**
-     * DTO → MovieDocument의 OTTInfo 변환 메서드
-     */
     private List<MovieDocument.OTTInfo> convertToMovieDocumentOttInfo(List<MovieDTO.OTTInfo> dtoList) {
+        if (dtoList == null) return new ArrayList<>();
         return dtoList.stream()
-                .map(dto -> new MovieDocument.OTTInfo(dto.getOttPlatform(), dto.getAvailable(), dto.getLink()))
+                .map(dto -> new MovieDocument.OTTInfo(
+                        dto.getOttPlatform(),
+                        dto.getAvailable(),
+                        dto.getLink()))
                 .collect(Collectors.toList());
     }
-
-//    /**
-//     * OTT 정보를 크롤링하여 업데이트 후 반환
-//     */
-//    private MovieDocument updateOttInfoForMovie(MovieDocument movie) {
-//        // 키노라이츠 크롤링
-//        List<MovieDTO> kinoMovies = kinoService.fetchMoviesByTitle(movie.getTitle());
-//
-//        if (!kinoMovies.isEmpty()) {
-//            MovieDTO kinoMovie = kinoMovies.get(0); // 첫 번째 크롤링 결과 사용
-//
-//            // OTT 정보 업데이트
-//            updateOTTLinksByTitle(movie.getTitle(), kinoMovie.getOttInfo(), kinoMovie.getTheaterLinks());
-//
-//            // 업데이트된 MongoDB 데이터 반환
-//            return movieRepository.findByTitle(movie.getTitle()).orElse(movie);
-//        }
-//
-//        return movie; // OTT 정보 없이 반환
-//    }
 }

@@ -13,6 +13,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /*
     날짜 : 2025.01.23
@@ -41,6 +42,13 @@ public class MovieDocument {
 
     @Field("lastCrawled")
     private Date lastCrawled; // 마지막 크롤링 시간
+
+    @Field("inTheater")
+    private boolean inTheater;
+
+    @Field("theaterLinks")  // ✅ 영화관 예매 정보 저장 필드 추가
+    private List<Map<String, String>> theaterLinks;
+
 
     @Data
     @Builder

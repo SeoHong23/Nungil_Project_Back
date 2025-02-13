@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yourproject.mapper.ReviewRepository">
+
+    <!-- 리뷰 저장 -->
+    <insert id="insertReview" parameterType="com.nungil.Dto.ReviewDTO">
+        INSERT INTO reviews (user_id, movie_id, rating, review_text, created_at)
+        VALUES (#{userId}, #{movieId}, #{rating}, #{reviewText}, NOW());
+    </insert>
+
+    <!-- 특정 영화의 리뷰 조회 -->
+    <select id="findReviewsByMovieId" resultType="com.nungil.Dto.ReviewDTO">
+        SELECT *
+        FROM reviews
+        WHERE movie_id = #{movieId}
+        ORDER BY created_at DESC;
+    </select>
+
+</mapper>
