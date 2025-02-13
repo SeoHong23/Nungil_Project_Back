@@ -112,7 +112,7 @@ public class VideoListService {
                 if (mappedKey.equals("releaseDate")) {
                     List<Criteria> yearCriterias = values.stream()
                             .map(year -> Criteria.where("releaseDate").regex("^" + year)) // ✅ 연도 필터링
-                            .collect(Collectors.toList());
+                            .toList();
 
                     query.addCriteria(new Criteria().orOperator(yearCriterias.toArray(new Criteria[0])));
                 } else if(mappedKey.equals("OTT")){
@@ -128,7 +128,7 @@ public class VideoListService {
         if (filters.containsKey("OTT")) {
             Set<String> ottPlatforms = filters.get("OTT");
             if (ottPlatforms != null && !ottPlatforms.isEmpty()) {
-                query.addCriteria(Criteria.where("ottInfo.ottPlatform").in(ottPlatforms));
+                query.addCriteria(Criteria.where("ottInfo.platform").in(ottPlatforms));
             }
         }
 
@@ -245,5 +245,45 @@ public class VideoListService {
         cacheService.saveToCache(result, targetDate, type);
 
         return result;
+    }
+
+    public List<VideoListDTO> getVideosWithQuery(int page, int size, String keywords, String searchType) {
+        Query query = new Query();
+
+        // ✅ 키워드 분리
+        String[] keywordArray = keywords.split(" ");
+        List<Criteria> keywordCriteria = new ArrayList<>();
+
+        // ✅ 검색 대상 필드 지정
+        if (searchType != null && !searchType.isEmpty()) {
+            for (String keyword : keywordArray) {
+
+                log.info(keyword);
+                keywordCriteria.add(Criteria.where(searchType).regex(keyword, "i")); // 🔥 대소문자 무시 검색
+            }
+            query.addCriteria(new Criteria().orOperator(keywordCriteria.toArray(new Criteria[0])));
+        }
+
+        log.info(keywordCriteria.toString());
+
+
+            // ✅ 정렬 기준 추가 (id 포함)
+        query.with(Sort.by("releaseDate").and(Sort.by("_id")));
+
+        // ✅ 페이지네이션 적용
+        query.with(PageRequest.of(page, size));
+
+
+        // ✅ MongoDB에서 데이터 조회
+        List<VideoList> videoList = mongoTemplate.find(query, VideoList.class);
+
+
+        return videoList.stream()
+                .map(video -> new VideoListDTO(
+                        video.getId(),
+                        video.getTitle(),
+                        (video.getPosters() != null && !video.getPosters().isEmpty()) ? video.getPosters().get(0) : null
+                ))
+                .collect(Collectors.toList());
     }
 }

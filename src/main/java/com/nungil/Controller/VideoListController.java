@@ -31,6 +31,16 @@ public class VideoListController {
     public Optional<VideoList> getVideoByTitle(@PathVariable String title) {
         return videoService.getVideoByTitle(title);
     }
+
+    @GetMapping("/search")
+    public List<VideoListDTO> searchVideoByTitle(@RequestParam int page,
+                                                 @RequestParam int size,
+                                                 @RequestParam String query,
+                                                 @RequestParam String searchType) {
+
+        return videoService.getVideosWithQuery(page, size, query, searchType);
+    }
+
     @GetMapping("/paged")
     public List<VideoListDTO> getPagedVideos(@RequestParam int page,
                                              @RequestParam int size,
