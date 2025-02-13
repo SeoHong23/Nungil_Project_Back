@@ -14,5 +14,5 @@ public interface WatchingRepository {
 
     boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
 
-    Long countWatchedByUser(@Param("userId") Long userId);
+    Long countWatchingByUser(@Param("userId") Long userId);
 }

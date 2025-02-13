@@ -22,4 +22,8 @@ public class NotInterestedService {
     public boolean checkNotInterested(NotInterestedDTO notInterestedDTO) {
         return notInterestedRepository.existsByUserIdAndVideoId(notInterestedDTO.getUserId(), notInterestedDTO.getVideoId());
     }
+
+    public Long countNotInterestingByUser(Long userId) {
+        return notInterestedRepository.countNotInterestingByUser(userId);
+    }
 }

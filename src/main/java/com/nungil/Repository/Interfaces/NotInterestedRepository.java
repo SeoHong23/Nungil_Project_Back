@@ -13,4 +13,6 @@ public interface NotInterestedRepository {
     void deleteNotInterested(NotInterestedDTO notInterestedDTO);
 
     boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
+
+    Long countNotInterestingByUser(@Param("userId") Long userId);
 }
