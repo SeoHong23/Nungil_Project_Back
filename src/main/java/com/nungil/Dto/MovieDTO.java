@@ -25,7 +25,7 @@ public class MovieDTO {
     private String runtime;  // 상영 시간
     private List<OTTInfo> ottInfo; // OTT 정보
     private boolean isInTheater;  // 🔥 추가: 영화관 상영 여부
-    private List<String> theaterLinks; // 영화관 이름 및 링크
+    private List< String> theaterLinks; // 영화관 이름 및 링크
 
     public List<OTTInfo> getOttInfo() {
         return ottInfo.stream().map(OTTInfo::transLink).collect(Collectors.toList());

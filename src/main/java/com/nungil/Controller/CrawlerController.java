@@ -25,8 +25,8 @@ public class CrawlerController {
      * 제목으로 MongoDB에서 영화 검색 (검색 전용)
      */
     @GetMapping("/search")
-    public ResponseEntity<?> searchMovies(@RequestParam String title) {
-        Map<String, Object> matchingMovies = movieService.updateOttInfo(title);
+    public ResponseEntity<?> searchMovies(@RequestParam String title, int page, int limit) {
+        Map<String, Object> matchingMovies = movieService.updateOttInfo(title, page, limit);
 
         if (matchingMovies.isEmpty()) {
             return ResponseEntity.badRequest().body("🚨 검색 결과가 없습니다.");
@@ -38,17 +38,17 @@ public class CrawlerController {
     /**
      * ott링크 수동 업데이트
      */
-    @PutMapping("/ott")
-    public ResponseEntity<String> updateOttInfo(@RequestBody MovieDTO request) {
-        boolean updated = movieService.updateOTTLinksByTitle(request.getTitle(), request.getOttInfo(), request.getTheaterLinks());
-
-        if (updated) {
-            return ResponseEntity.ok("✅ OTT 정보가 성공적으로 업데이트되었습니다: " + request.getTitle());
-        } else {
-            return ResponseEntity.badRequest().body("🚨 업데이트 실패: 해당 영화가 MongoDB에 없습니다.");
-        }
-    }
-
+//    @PutMapping("/ott")
+//    public ResponseEntity<String> updateOttInfo(@RequestBody MovieDTO request) {
+//        boolean updated = movieService.updateOTTLinksByTitle(request.getTitle(), request.getOttInfo(), request.getTheaterLinks());
+//
+//        if (updated) {
+//            return ResponseEntity.ok("✅ OTT 정보가 성공적으로 업데이트되었습니다: " + request.getTitle());
+//        } else {
+//            return ResponseEntity.badRequest().body("🚨 업데이트 실패: 해당 영화가 MongoDB에 없습니다.");
+//        }
+//    }
+//
 
     /**
      * mongodb에서 없을 시 kobisAPI호출해서 검색
