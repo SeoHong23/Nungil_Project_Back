@@ -257,18 +257,14 @@ public class VideoListService {
         // ✅ 검색 대상 필드 지정
         if (searchType != null && !searchType.isEmpty()) {
             for (String keyword : keywordArray) {
-
-                log.info(keyword);
                 keywordCriteria.add(Criteria.where(searchType).regex(keyword, "i")); // 🔥 대소문자 무시 검색
             }
             query.addCriteria(new Criteria().orOperator(keywordCriteria.toArray(new Criteria[0])));
         }
 
-        log.info(keywordCriteria.toString());
-
 
             // ✅ 정렬 기준 추가 (id 포함)
-        query.with(Sort.by("releaseDate").and(Sort.by("_id")));
+        query.with(Sort.by(Sort.Order.desc("releaseDate")).and(Sort.by("_id")));
 
         // ✅ 페이지네이션 적용
         query.with(PageRequest.of(page, size));
