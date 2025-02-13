@@ -29,6 +29,15 @@ public class WatchingController {
 
     }
 
+    @GetMapping("/watching/count")
+    public ResponseEntity<Map<String, Long>> getWatchingCount(@RequestParam Long userId) {
+        Long count = watchingService.countWatchingByUser(userId);
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/watching/remove")
     public ResponseEntity<Map<String, String>> removewatching(@RequestBody WatchingDTO watchingDTO) {
         watchingService.removeWatching(watchingDTO);

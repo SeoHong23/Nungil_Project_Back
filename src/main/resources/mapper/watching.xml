@@ -18,5 +18,9 @@
             WHERE user_id = #{userId} AND video_id = #{videoId}
         </select>
 
+        <select id="countWatchedByUser" resultType="long">
+            SELECT COUNT(*) FROM watching WHERE user_id = #{userId}
+        </select>
+
 
     </mapper>
