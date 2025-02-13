@@ -27,7 +27,7 @@ public class WatchingService {
     }
 
     public Long countWatchingByUser(Long userId) {
-        return watchingRepository.countWatchedByUser(userId);
+        return watchingRepository.countWatchingByUser(userId);
     }
 
 }

@@ -27,6 +27,15 @@ public class NotInterestedController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/notinterested/count")
+    public ResponseEntity<Map<String, Long>> getnotinterestedCount(@RequestParam Long userId) {
+        Long count = notInterestedService.countNotInterestingByUser(userId);
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/notinterested/remove")
     public ResponseEntity<Map<String,String>> removenotinterested(@RequestBody NotInterestedDTO notinterestedDTO) {
         notInterestedService.removeNotInterested(notinterestedDTO);
