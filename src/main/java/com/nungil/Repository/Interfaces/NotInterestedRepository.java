@@ -14,5 +14,5 @@ public interface NotInterestedRepository {
 
     boolean existsByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") String videoId);
 
-    Long countNotInterestingByUser(@Param("userId") Long userId);
+    Long countNotInterestedByUser(@Param("userId") Long userId);
 }

@@ -29,7 +29,7 @@ public class NotInterestedController {
 
     @GetMapping("/notinterested/count")
     public ResponseEntity<Map<String, Long>> getnotinterestedCount(@RequestParam Long userId) {
-        Long count = notInterestedService.countNotInterestingByUser(userId);
+        Long count = notInterestedService.countNotInterestedByUser(userId);
 
         Map<String, Long> response = new HashMap<>();
         response.put("count", count);
