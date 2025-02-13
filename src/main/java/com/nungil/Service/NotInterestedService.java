@@ -23,7 +23,7 @@ public class NotInterestedService {
         return notInterestedRepository.existsByUserIdAndVideoId(notInterestedDTO.getUserId(), notInterestedDTO.getVideoId());
     }
 
-    public Long countNotInterestingByUser(Long userId) {
-        return notInterestedRepository.countNotInterestingByUser(userId);
+    public Long countNotInterestedByUser(Long userId) {
+        return notInterestedRepository.countNotInterestedByUser(userId);
     }
 }
