@@ -56,6 +56,7 @@ public class UserController {
             response.put("nickname", user.getNickname());
             response.put("birthYear", user.getBirthDate());
             response.put("gender", user.getGender().toString());
+            response.put("admin", user.isAdmin());
 
             // JSON 형식으로 반환
             return ResponseEntity.ok(response); // JSON 형식으로 반환
