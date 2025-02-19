@@ -23,13 +23,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/banner")
 public class BannerController {
-    private static final String UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads").toString() + "/";
+    private static final String BANNER_DIR = Paths.get(System.getProperty("user.dir"), "uploads").toString() + "/" + "banner/";
 
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
-
-    private final String bannerDir = uploadDir + "banner/";
 
     @Autowired
     private BannerService bannerService;
@@ -46,7 +42,7 @@ public class BannerController {
             @RequestPart(value = "image") MultipartFile image) {
         try {
 // 업로드 폴더가 없으면 생성
-            Path uploadPath = Paths.get(bannerDir);
+            Path uploadPath = Paths.get(BANNER_DIR);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
@@ -54,7 +50,7 @@ public class BannerController {
             // 1. 이미지 파일이 있을 경우 저장
             if (image != null && !image.isEmpty()) {
                 String fileName = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-                String filePath = bannerDir + fileName;
+                String filePath = BANNER_DIR + fileName;
                 File uploadFile = new File(filePath);
 
                 // 파일 저장
@@ -88,7 +84,7 @@ public class BannerController {
     public ResponseEntity<?> getImage(@PathVariable String filename) {
         try {
             // 파일 경로 생성
-            Path filePath = Paths.get(bannerDir).resolve(filename).normalize();
+            Path filePath = Paths.get(BANNER_DIR).resolve(filename).normalize();
             Resource resource = new UrlResource(filePath.toUri());
 
             // 파일이 존재하지 않거나 읽을 수 없을 때
