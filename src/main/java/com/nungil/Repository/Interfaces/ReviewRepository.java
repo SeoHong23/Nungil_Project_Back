@@ -11,4 +11,6 @@ public interface ReviewRepository {
     void insertReview(ReviewDTO review);
 
     List<ReviewDTO> findReviewsByMovie(@Param("movieId") int movieId);
+    List<ReviewDTO> getReviewsByMovieId(@Param("movieId") Long movieId, @Param("currentUserId") Long currentUserId);
+
 }
