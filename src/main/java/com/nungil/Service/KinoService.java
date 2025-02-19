@@ -32,33 +32,34 @@ public class KinoService {
         WebDriver driver = initializeDriver();
 
         try {
-            String searchUrl = "https://m.kinolights.com/search?keyword=" + URLEncoder.encode(title, StandardCharsets.UTF_8);
+            String searchUrl = "https://m.kinolights.com/search?keyword="  + URLEncoder.encode(title, StandardCharsets.UTF_8);
             System.out.println("키노라이츠 검색 URL: " + searchUrl);
             driver.get(searchUrl);
 
             // 검색 결과 대기
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
-            wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("a.content__body")));
+            try {
+                wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("a.content__body")));
+            } catch (TimeoutException e) {
+                System.err.println("🚨 검색 결과 로딩 시간 초과: " + e.getMessage());
+                return kinoMovies; // 검색 결과 없음
+            }
+
             List<WebElement> movieItems = driver.findElements(By.cssSelector("a.content__body"));
             for (WebElement item : movieItems) {
-
                 boolean success = false;
                 int retryCount = 0;
-
                 while (!success && retryCount < 3) {
                     try {
-
                         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", item);
                         processMovieItem(item, driver, kinoMovies);
-
                         success = true;
-
                     } catch (StaleElementReferenceException e) {
-                        System.err.println("🚨 요소가 업데이트되거나 사라졌습니다. 다시 시도합니다. (재시도 횟수: " + retryCount + ")");
+                        System.err.println("🚨 요소가 업데이트됨, 다시 시도 중... (재시도 횟수: " + retryCount + ")");
                         retryCount++;
                     } catch (TimeoutException e) {
-                        System.err.println("🚨 요소 로딩 시간 초과. 다시 시도합니다. (재시도 횟수: " + retryCount + ")");
-                        retryCount++;
+                        System.err.println("🚨 요소 로딩 시간 초과. 다음 영화로 이동합니다.");
+                        break; // 현재 영화 건너뛰고 다음 영화 크롤링
                     }
                 }
             }
@@ -68,11 +69,12 @@ public class KinoService {
         return kinoMovies;
     }
 
+
     private WebDriver initializeDriver() {
         System.out.println("WebDriver 초기화 중...");
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1080");
+        options.addArguments( "--disable-gpu", "--window-size=1920,1080");
         WebDriver driver = new ChromeDriver(options);
         System.out.println("WebDriver 초기화 완료.");
         return driver;
@@ -104,10 +106,17 @@ public class KinoService {
 
             List<MovieDTO.OTTInfo> ottPlatforms = fetchOTTInfo(detailPageUrl, driver, movieDTO);
 
+            boolean isInTheater = checkIfInTheater(driver);
+            List<String> theaterLinks = isInTheater ? fetchTheaterInfo(driver) : new ArrayList<>();
+
             // MovieDTO 생성
             movieDTO.setTitle(kinoTitle);
             movieDTO.setReleaseDate(kinoYear);
             movieDTO.setOttInfo(ottPlatforms);
+            movieDTO.setInTheater(isInTheater);
+            movieDTO.setTheaterLinks(theaterLinks);
+
+            System.out.println("📌 저장된 MovieDTO: " + movieDTO);
 
             kinoMovies.add(movieDTO);
 
@@ -117,10 +126,15 @@ public class KinoService {
         }
     }
 
+
+
+
     private MovieDocument findMovieByTitleAndYear(String kinoTitle, String kinoYear) {
 
-        Criteria criteria = Criteria.where("title").is(kinoTitle)
+        String cleanedKinoTitle = kinoTitle.replaceAll("[^a-zA-Z0-9가-힣]", "").toLowerCase().trim();
+        Criteria criteria = Criteria.where("title").regex(cleanedKinoTitle, "i")
                 .and("releaseDate").regex("^" + kinoYear);
+
 
 
         Query query = new Query(criteria);
@@ -136,21 +150,24 @@ public class KinoService {
     }
 
 
-
-
     private String extractYearFromSubtitle(String subtitle) {
         if (subtitle == null || subtitle.isEmpty()) {
             System.out.println("자막이 비어 있음.");
             return "";
         }
-        String year = "";
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d{4}").matcher(subtitle);
+
+        // "2024년" 같은 형식에서 연도를 추출
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d{4})년").matcher(subtitle);
         if (matcher.find()) {
-            year = matcher.group();
+            String year = matcher.group(1); // 첫 번째 그룹 (2024) 가져오기
+            System.out.println("추출된 연도: " + year);
+            return year;
         }
-        System.out.println("추출된 연도: " + year);
-        return year;
+
+        System.out.println("연도 추출 실패.");
+        return "";
     }
+
 
     private List<MovieDTO.OTTInfo> fetchOTTInfo(String detailPageUrl, WebDriver driver, MovieDTO movie) {
         List<MovieDTO.OTTInfo> ottInfos = new ArrayList<>();
@@ -210,44 +227,50 @@ public class KinoService {
 
 
     private boolean checkIfInTheater(WebDriver driver) {
-        try {
-            // 영화관 상영 여부 확인
-            WebElement theaterContainer = driver.findElement(By.cssSelector("div.movie-current-released"));
-            return theaterContainer != null; // 컨테이너가 존재하면 true
-        } catch (NoSuchElementException e) {
-            System.out.println("🎬 '영화관 상영중' 정보 없음.");
-            return false; // 컨테이너가 없으면 false
-        }
+        // "movie-current-released" 클래스를 가진 요소가 있는지 확인
+        List<WebElement> theaterElements = driver.findElements(By.cssSelector("div.movie-current-released"));
+
+        boolean isInTheater = !theaterElements.isEmpty();
+        System.out.println("🎬 현재 상영 여부: " + isInTheater);
+
+        return isInTheater;
     }
 
     private List<String> fetchTheaterInfo(WebDriver driver) {
         List<String> theaterLinks = new ArrayList<>();
-        try {
-            // 영화관 예매 링크 가져오기
-            List<WebElement> theaterButtons = driver.findElements(By.cssSelector("a.theater"));
 
-            for (WebElement button : theaterButtons) {
-                String link = button.getAttribute("href");
-                if (link != null && !link.isEmpty()) {
-                    theaterLinks.add(link);
-                    System.out.println("🎟️ 예매 링크 추가: " + link);
-                }
-            }
-        } catch (NoSuchElementException e) {
+        // "a.theater" 클래스를 가진 요소 목록 가져오기
+        List<WebElement> theaterButtons = driver.findElements(By.cssSelector("a.theater"));
+
+        if (theaterButtons.isEmpty()) {
             System.out.println("🎬 영화관 예매 링크 없음.");
+            return theaterLinks;
         }
+
+        for (WebElement button : theaterButtons) {
+            String link = button.getAttribute("href");
+            if (link != null && !link.isBlank()) { // `isBlank()`로 공백 체크
+                theaterLinks.add(link);
+                System.out.println("🎟️ 예매 링크 추가: " + link);
+            }
+        }
+
         return theaterLinks;
     }
 
     private String getElementText(WebElement element, String cssSelector) {
         try {
             WebElement target = element.findElement(By.cssSelector(cssSelector));
-            String text = target != null ? target.getText().trim() : "";
-            System.out.println("CSS Selector: " + cssSelector + ", 텍스트: " + text);
-            return text;
+            if (target != null) {
+                String text = target.getText().trim();
+                System.out.println("CSS Selector: " + cssSelector + ", 텍스트: " + text);
+                return text;
+            }
         } catch (NoSuchElementException | StaleElementReferenceException e) {
-            System.out.println("CSS Selector [" + cssSelector + "]에서 요소를 찾을 수 없음.");
-            return "";
+            System.out.println("❌ 요소 찾기 실패: " + cssSelector);
         }
+        return "";
     }
+
+
 }
