@@ -46,7 +46,7 @@ public class BannerController {
             @RequestPart(value = "image") MultipartFile image) {
         try {
 // 업로드 폴더가 없으면 생성
-            Path uploadPath = Paths.get(UPLOAD_DIR);
+            Path uploadPath = Paths.get(bannerDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
@@ -85,17 +85,31 @@ public class BannerController {
     }
 
     @GetMapping("/image/{filename}")
-    public ResponseEntity<Resource> getImage(@PathVariable String filename) throws MalformedURLException {
-        Path filePath = Paths.get(bannerDir).resolve(filename);
-        Resource resource = new UrlResource(filePath.toUri());
+    public ResponseEntity<?> getImage(@PathVariable String filename) {
+        try {
+            // 파일 경로 생성
+            Path filePath = Paths.get(bannerDir).resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
 
-        if (!resource.exists() || !resource.isReadable()) {
-            return ResponseEntity.notFound().build();
+            // 파일이 존재하지 않거나 읽을 수 없을 때
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("파일을 찾을 수 없거나 읽을 수 없습니다.");
+            }
+
+            // 정상적으로 파일을 읽을 수 있을 때
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)  // PNG로 가정 (JPG 등 다른 확장자도 가능)
+                    .body(resource);
+        } catch (MalformedURLException e) {
+            // 잘못된 URL 형식일 경우
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("잘못된 파일 경로입니다. URL을 확인해 주세요.");
+        } catch (Exception e) {
+            // 다른 예외 처리
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("서버에서 문제가 발생했습니다. 다시 시도해주세요.");
         }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_PNG) // PNG로 가정 (JPG 등 다른 확장자도 가능)
-                .body(resource);
     }
 
     @DeleteMapping("/delete")
