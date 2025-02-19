@@ -6,8 +6,8 @@
 
     <!-- 리뷰 저장 -->
     <insert id="insertReview" parameterType="com.nungil.Dto.ReviewDTO">
-        INSERT INTO reviews (user_id, movie_id, rating, review_text, created_at)
-        VALUES (#{userId}, #{movieId}, #{rating}, #{reviewText}, NOW());
+        INSERT INTO review (user_id, movie_id, content, rating, created_at)
+        VALUES (#{userId}, #{movieId}, #{content}, #{rating}, NOW());
     </insert>
 
     <!-- 특정 영화의 리뷰 조회 -->
