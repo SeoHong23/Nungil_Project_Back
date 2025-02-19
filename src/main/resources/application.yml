@@ -51,6 +51,9 @@ api:
     kmdb:
         serviceKey: 18JYN87W3523502WR6Y3
 
+file:
+    upload-dir: /home/ec2-user/uploads
+
 management:
     endpoints:
         web:

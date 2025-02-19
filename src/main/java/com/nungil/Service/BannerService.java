@@ -1,15 +1,35 @@
 package com.nungil.Service;
 
+import com.nungil.Dto.BannerDTO;
 import com.nungil.Repository.Interfaces.BannerRepository;
+import com.nungil.entity.BannerEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class BannerService {
     private final BannerRepository bannerRepository;
 
-    public void insertBanner(String title, String path){
-        bannerRepository.insertBanner(title, path);
+
+    public void insertBanner(String title, String fileName){
+        bannerRepository.insertBanner(title, fileName);
+    }
+
+    public List<BannerDTO> getAllBanner(){
+        return bannerRepository.findAllBanner().stream().map(
+                banner -> new BannerDTO(banner.getId()+"", banner.getTitle(), banner.getFileName())).collect(Collectors.toList());
+    }
+
+    public BannerDTO getBannerById(int id){
+        return bannerRepository.selectBannerById(id);
+    }
+
+    public void deleteBanner(int id){
+        bannerRepository.deleteBanner(id);
     }
 }

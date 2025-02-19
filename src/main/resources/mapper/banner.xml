@@ -7,4 +7,16 @@
             INSERT INTO banner (title, path) VALUES (#{title}, #{path});
         </insert>
 
+    <select id="findAllBanner">
+        SELECT * FROM banner;
+    </select>
+
+    <select id="selectBannerById" resultType="com.nungil.Dto.BannerDTO">
+        SELECT * FROM banner WHERE id = #{id};
+    </select>
+
+    <delete id="deleteBanner">
+        DELETE FROM banner WHERE id = #{id};
+    </delete>
+
     </mapper>

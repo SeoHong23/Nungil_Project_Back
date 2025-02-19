@@ -1,16 +1,14 @@
 package com.nungil.Dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 @Setter
 @Getter
 public class BannerDTO {
-    private int id;
+    private String id;
     private String title;
-    private String path;
+    private String fileName;
 }
