@@ -205,19 +205,23 @@ public class VideoListService {
         Map<String, VideoList> videoMapByCommCode = videoListByCommCode.stream()
                 .collect(Collectors.toMap(VideoList::getCommCode, v -> v));
 
+
         // 3️⃣ 1차적으로 매칭되지 않은 영화들에 대해 title 기준으로 추가 검색
         List<String> unmatchedTitles = dailyBoxOfficeList.stream()
                 .filter(movie -> !videoMapByCommCode.containsKey(movie.getMovieCd())) // commCode 기준으로 매칭되지 않은 영화들 필터링
-                .map(KobisResponseDTO.MovieInfo::getMovieNm)
+                .map(movie -> movie.getMovieNm().trim()) // 영화 제목에 trim() 적용
                 .collect(Collectors.toList());
 
         List<VideoList> videoListByTitle = videoRepository.findByTitleIn(unmatchedTitles);
 
+
+
         // 4️⃣ MongoDB 데이터 맵핑 (title -> VideoList 매핑)
         Map<String, VideoList> videoMapByTitle = videoListByTitle.stream()
                 .collect(Collectors.toMap(VideoList::getTitle, v -> v));
-        log.info(dailyBoxOfficeList.toString());
         // 5️⃣ KOBIS 데이터와 MongoDB 데이터 매칭
+
+
 
         List<VideoRankResponseDTO> result = dailyBoxOfficeList.stream()
                 .map(movie -> {
@@ -226,7 +230,7 @@ public class VideoListService {
 
                     // 2️⃣ commCode로 찾지 못한 경우, title 기반 매칭
                     if (matchedVideo == null) {
-                        matchedVideo = videoMapByTitle.get(movie.getMovieNm());
+                        matchedVideo = videoMapByTitle.get(movie.getMovieNm().trim());
                     }
 
                     return new VideoRankResponseDTO(
