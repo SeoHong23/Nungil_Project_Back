@@ -32,4 +32,8 @@ public class BannerService {
     public void deleteBanner(int id){
         bannerRepository.deleteBanner(id);
     }
+
+    public BannerDTO getRandomBanner(){
+        return bannerRepository.randomBanner();
+    }
 }

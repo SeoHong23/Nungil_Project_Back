@@ -13,4 +13,5 @@ public interface BannerRepository {
     BannerDTO selectBannerById(@Param("id") Integer id);
     List<BannerEntity> findAllBanner();
     void deleteBanner(@Param("id") Integer id);
+    BannerDTO randomBanner();
 }

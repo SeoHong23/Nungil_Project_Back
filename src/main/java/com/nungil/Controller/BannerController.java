@@ -37,6 +37,12 @@ public class BannerController {
         return ResponseEntity.ok(banners);
     }
 
+    @GetMapping("/random")
+    public ResponseEntity<BannerDTO> ramdom() {
+        BannerDTO banners = bannerService.getRandomBanner();
+        return ResponseEntity.ok(banners);
+    }
+
     @PostMapping("/insert")
     public ResponseEntity<Boolean> uploadBanner (
             @RequestParam("title") String title,
