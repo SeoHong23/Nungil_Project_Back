@@ -62,7 +62,7 @@ public class VideoListService {
     }
 
 
-    public List<VideoListDTO> getVideosWithPagination(int page, int size, Sort orderBy) {
+    public List<VideoListDTO> getVideosWithPagination(int page, int size, Sort orderBy, boolean isNotOpen) {
 
 
         Query query = new Query();
@@ -73,7 +73,11 @@ public class VideoListService {
         String today = sdf.format(new Date());
 
         query.with(orderBy.and(Sort.by("_id")));
-        query.addCriteria(Criteria.where("releaseDate").lte(today));
+        if(!isNotOpen) {
+            query.addCriteria(Criteria.where("releaseDate").lte(today));
+        }else{
+            query.addCriteria(Criteria.where("releaseDate").gt(today));
+        }
 
         query.with(PageRequest.of(page, size));
 
@@ -89,7 +93,7 @@ public class VideoListService {
                 .collect(Collectors.toList());
     }
 
-    public List<VideoListDTO> getVideosWithFilter(int page, int size, Map<String, Set<String>> filters, Sort orderBy) {
+    public List<VideoListDTO> getVideosWithFilter(int page, int size, Map<String, Set<String>> filters, Sort orderBy, boolean isNotOpen) {
         Query query = new Query();
 
         Map<String, String> keyMapping = Map.of(
@@ -133,7 +137,11 @@ public class VideoListService {
         }
 
         // ✅ 개봉일 기준 필터 추가
-        query.addCriteria(Criteria.where("releaseDate").lte(today));
+        if(!isNotOpen) {
+            query.addCriteria(Criteria.where("releaseDate").lte(today));
+        }else{
+            query.addCriteria(Criteria.where("releaseDate").gt(today));
+        }
 
         // ✅ 정렬 기준 추가 (id 포함)
         query.with(orderBy.and(Sort.by("_id")));

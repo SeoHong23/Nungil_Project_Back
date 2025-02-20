@@ -45,12 +45,13 @@ public class VideoListController {
     public List<VideoListDTO> getPagedVideos(@RequestParam int page,
                                              @RequestParam int size,
                                              @RequestParam(required = false) String orderBy,
+                                             @RequestParam(required = false) boolean isNotOpen,
                                              @RequestParam Map<String, String> filters) { // ✅ 필터를 동적으로 받음
 
 
         // ✅ 필터 데이터 가공 (필수값 제외)
         Map<String, Set<String>> processedFilters = filters.entrySet().stream()
-                .filter(entry -> !entry.getKey().equals("page") && !entry.getKey().equals("size") && !entry.getKey().equals("orderBy"))
+                .filter(entry -> !entry.getKey().equals("page") && !entry.getKey().equals("size") && !entry.getKey().equals("orderBy")&& !entry.getKey().equals("isNotOpen"))
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> new HashSet<>(Arrays.asList(entry.getValue().split(","))) // 쉼표 기준 분할
@@ -65,8 +66,8 @@ public class VideoListController {
         // ✅ 필터가 없는 경우 일반 조회, 있는 경우 필터링
 
         return processedFilters.isEmpty()
-                ? videoService.getVideosWithPagination(page, size, type)
-                : videoService.getVideosWithFilter(page, size, processedFilters, type);
+                ? videoService.getVideosWithPagination(page, size, type, isNotOpen)
+                : videoService.getVideosWithFilter(page, size, processedFilters, type, isNotOpen);
     }
     @GetMapping("/random")
     public List<VideoListDTO> getVideoRandom(@RequestParam int size) {
