@@ -23,7 +23,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/banner")
 public class BannerController {
-    private static final String BANNER_DIR = Paths.get(System.getProperty("user.dir"), "uploads").toString() + "/" + "banner/";
+    private static final String BANNER_DIR = Paths.get(System.getProperty("user.dir"), "uploads", "banner").toString() + File.separator;
+
 
 
 
