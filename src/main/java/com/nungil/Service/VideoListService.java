@@ -20,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -222,10 +223,22 @@ public class VideoListService {
 
         List<VideoList> videoListByTitle = videoRepository.findByTitleIn(unmatchedTitles);
 
+        // title 기준으로 최신 releaseDate를 가진 영화만 선택
+        Map<String, VideoList> latestMoviesByTitle = videoListByTitle.stream()
+                .collect(Collectors.toMap(
+                        VideoList::getTitle,  // key: 영화 제목
+                        Function.identity(),  // value: VideoList 객체
+                        (existing, replacement) ->
+                                existing.getReleaseDate().compareTo(replacement.getReleaseDate()) >= 0
+                                        ? existing : replacement // 최신 releaseDate 선택
+                ));
+
+// 최종적으로 최신 개봉일을 가진 영화 목록
+        List<VideoList> latestVideoList = new ArrayList<>(latestMoviesByTitle.values());
 
 
         // 4️⃣ MongoDB 데이터 맵핑 (title -> VideoList 매핑)
-        Map<String, VideoList> videoMapByTitle = videoListByTitle.stream()
+        Map<String, VideoList> videoMapByTitle = latestVideoList.stream()
                 .collect(Collectors.toMap(VideoList::getTitle, v -> v));
         // 5️⃣ KOBIS 데이터와 MongoDB 데이터 매칭
 
