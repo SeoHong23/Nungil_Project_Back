@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 @Mapper
-public interface LikesRepository {
+public interface ReactionRepository {
 
     int insertLike(@Param("videoId") String videoId, @Param("userId") Long userId);
 

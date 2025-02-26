@@ -7,13 +7,12 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "watching")
+@Table(name = "user_video_reactions", uniqueConstraints = @UniqueConstraint(columnNames = {"video_id", "user_id"}))
 @Getter
-@Setter
-@NoArgsConstructor
+@ToString
 @AllArgsConstructor
-@Builder
-public class WatchingEntity {
+@NoArgsConstructor
+public class ReactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +24,9 @@ public class WatchingEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;     // MySQL 유저 ID
 
+    private int reaction;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private Timestamp createdAt;
-
 }

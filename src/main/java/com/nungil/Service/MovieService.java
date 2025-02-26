@@ -1,5 +1,6 @@
 package com.nungil.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.springframework.data.mongodb.core.index.Index;
 import com.mongodb.client.result.UpdateResult;
@@ -14,10 +15,12 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class MovieService {
     private static final int PAGE_SIZE = 10;
@@ -27,7 +30,7 @@ public class MovieService {
     private final KinoService kinoService;
 
     @Autowired
-    public MovieService(MongoTemplate mongoTemplate, MovieRepository movieRepository, KinoService kinoService) {
+    public MovieService(MongoTemplate mongoTemplate, MovieRepository movieRepository, KinoService kinoService, TmdbService tmdbService) {
         this.mongoTemplate = mongoTemplate;
         this.movieRepository = movieRepository;
         this.kinoService = kinoService;
@@ -217,4 +220,7 @@ public class MovieService {
                         dto.getLink()))
                 .collect(Collectors.toList());
     }
+
+
+
 }

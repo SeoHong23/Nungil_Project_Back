@@ -12,7 +12,6 @@ import org.simpleframework.xml.Default;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
