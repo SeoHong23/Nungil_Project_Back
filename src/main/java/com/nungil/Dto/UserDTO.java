@@ -21,8 +21,9 @@ public class UserDTO {
     private int birthDate;    // 생년월일
     private Gender gender;       // 성별
     private boolean admin;
+    private String kakaoId; // 카카오로그인시 id
 
-    public UserDTO(int userid, String password, String nickname, String email, int birthDate, Gender gender,boolean admin) {
+    public UserDTO(int userid, String password, String nickname, String email, int birthDate, Gender gender,boolean admin, String kakaoId) {
         this.userid = userid;
         this.password = password;
         this.nickname = nickname;
@@ -30,5 +31,6 @@ public class UserDTO {
         this.birthDate = birthDate;
         this.gender = gender;
         this.admin = admin;
+        this.kakaoId = kakaoId;
     }
 }

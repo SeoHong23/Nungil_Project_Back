@@ -59,6 +59,26 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public UserDTO findOrCreateKakaoUser(UserDTO userDTO) {
 
+        UserDTO existingUser = userRepository.findByKakaoId(userDTO.getKakaoId());
+
+        if (existingUser != null) {
+            return existingUser;
+        }
+
+        UserDTO newUser = new UserDTO();
+        newUser.setKakaoId(userDTO.getKakaoId());
+        newUser.setEmail(userDTO.getEmail());
+        newUser.setNickname(userDTO.getNickname());
+        newUser.setPassword("KAKAO_USER");  // 임시 비밀번호
+        newUser.setGender(userDTO.getGender());
+        newUser.setAdmin(false);
+
+        // 3. DB에 저장 (userid는 자동 생성됨)
+        userRepository.insertUser(newUser);
+        return newUser;
+
+    }
 
 }

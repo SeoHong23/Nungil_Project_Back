@@ -14,4 +14,7 @@ public interface UserRepository {
     void insertUser(UserDTO user);
 
     UserDTO findByEmail(@Param("email") String email);
+
+    UserDTO findByKakaoId(String kakaoId);
+
 }

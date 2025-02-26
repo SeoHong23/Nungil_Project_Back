@@ -75,4 +75,35 @@ public class UserController {
         return ResponseEntity.ok(exists);
     }
 
+    @PostMapping("/kakao/login")
+    public ResponseEntity<Map<String, Object>> kakaoLogin(@RequestBody UserDTO userDTO) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+
+            if (userDTO.getGender() == null) {
+                response.put("message", "Gender is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            System.out.println("Received kakao login request: " + userDTO);
+            UserDTO user = (UserDTO) userService.findOrCreateKakaoUser(userDTO);
+
+            response.put("message", "Login successful");
+            response.put("userId", user.getUserid());
+            response.put("email", user.getEmail());
+            response.put("nickname", user.getNickname());
+            response.put("birthYear", user.getBirthDate());
+            response.put("gender", user.getGender().toString());
+            response.put("admin", user.isAdmin());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.out.println("Error in kakao login: " + e.getMessage());
+            response.put("message", "Login failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+
+    }
+
+
 }
