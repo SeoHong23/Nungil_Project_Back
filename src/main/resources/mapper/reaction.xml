@@ -1,0 +1,18 @@
+    <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+            "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.nungil.Repository.Interfaces.ReactionRepository">
+
+        <insert id="insertLike">
+            INSERT INTO user_video_reactions (video_id, user_id, reaction) VALUES (#{videoId}, #{userId},1);
+        </insert>
+
+        <select id="existsReaction" resultType="int">
+            SELECT reaction FROM user_video_reactions WHERE video_id = #{videoId} AND user_id = #{userId};
+        </select>
+
+        <delete id="deleteReaction">
+            DELETE FROM user_video_reactions WHERE video_id = #{videoId} AND user_id = #{userId};
+        </delete>
+
+    </mapper>

@@ -45,6 +45,7 @@ public class VideoDocument {
     private String awards2;
     private List<String> keywords;
     private List<MovieDocument.OTTInfo> ottInfo;
+    private Integer tmdbId;
     private boolean isCrawled = false;
     private Date lastCrawled;
 
@@ -65,8 +66,16 @@ public class VideoDocument {
         } else if (imgUrl.contains("/thm/02/")) {
             newUrl = imgUrl.replace("/thm/02/", "/" + type + "/");
         }
-        newUrl = newUrl.replace("tn_", "").replaceAll("\\.[^.]+$", "_01");
+        newUrl = newUrl.replace("tn_", "");
+        // 확장자 제거
+        newUrl = newUrl.replaceAll("\\.[^.]+$", "");
 
+        // "_숫자"가 있으면 그대로 두고, 없으면 "_01"을 추가
+        if (newUrl.matches(".*_\\d+$")) {
+            // "_숫자"가 있으면 그대로 둠
+        } else {
+            newUrl = newUrl + "_01";
+        }
         try {
             return r2ImageService.processImage(newUrl,type); // S3로 이미지를 업로드하고 URL을 받음
         } catch (Exception e) {

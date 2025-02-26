@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface ApiVideoRepository extends MongoRepository<VideoDocument,String> {
     boolean existsByTitleAndProdYear(String title, String prodYear);
+    boolean existsByTitleAndReleaseDate(String title, String releaseDate);
+    List<VideoDocument> findByTmdbIdIsNull();
 
     List<VideoDocument> id(String id);
 }

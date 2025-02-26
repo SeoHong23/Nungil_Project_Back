@@ -50,6 +50,8 @@ api:
         api-key: b6294028408df8733f4113de4cc9f206
     kmdb:
         serviceKey: 18JYN87W3523502WR6Y3
+    tmdb:
+        key: 0d40786ff6fad61ec32b2acf510cdfdf
 
 file:
     upload-dir: /home/ec2-user/uploads
