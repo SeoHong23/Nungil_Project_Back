@@ -49,7 +49,7 @@ public class VideoDocument {
 
     @Indexed(sparse = true, unique = true)
     private Integer tmdbId;
-
+    @Builder.Default
     private boolean isCrawled = false;
     private Date lastCrawled;
 

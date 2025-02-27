@@ -1,4 +1,4 @@
-package com.nungil.config;
+package com.nungil.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,10 +12,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()  // CSRF 보호 비활성화 (필요시 활성화)
-                .authorizeHttpRequests()
+        http
+                .csrf(csrf -> csrf.disable())  // 최신 방식의 CSRF 비활성화
+                .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/**").permitAll()  // 공개 경로
-                .anyRequest().authenticated();  // 인증된 사용자만 접근 가능
+                .anyRequest().authenticated());  // 인증된 사용자만 접근 가능
 
         return http.build();
     }
