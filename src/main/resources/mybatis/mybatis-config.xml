@@ -13,6 +13,6 @@
     </settings>
 
     <mappers>
-        <mapper resource="mapper/UserMapper.xml"/>
+        <mapper resource="mapper/user.xml"/>
     </mappers>
 </configuration>

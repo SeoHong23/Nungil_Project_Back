@@ -47,6 +47,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'com.hankcs:hanlp:portable-1.8.6'
+    implementation 'org.json:json:20231013'  // 최신 버전 사용
 
 
 }

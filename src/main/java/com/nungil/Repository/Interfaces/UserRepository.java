@@ -15,6 +15,8 @@ public interface UserRepository {
 
     UserDTO findByEmail(@Param("email") String email);
 
-    UserDTO findByKakaoId(String kakaoId);
+    UserDTO findByKakaoId(Long kakaoId);
+
+    int save(UserDTO user);
 
 }
