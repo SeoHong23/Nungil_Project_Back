@@ -1,15 +1,10 @@
 package com.nungil.Repository.Interfaces;
 
+import com.nungil.Document.VideoReaction;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+@Repository
+public interface ReactionRepository extends MongoRepository<VideoReaction, String> {
 
-@Mapper
-public interface ReactionRepository {
-
-    int insertLike(@Param("videoId") String videoId, @Param("userId") Long userId);
-
-    int existsLike(@Param("videoId") String videoId, @Param("userId") Long userId);
-
-    void deleteLike(@Param("videoId") String videoId, @Param("userId") Long userId);
 }

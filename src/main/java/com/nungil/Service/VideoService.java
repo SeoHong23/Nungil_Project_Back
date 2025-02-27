@@ -5,7 +5,6 @@ import com.nungil.Document.MovieDocument;
 import com.nungil.Document.VideoDocument;
 import com.nungil.Dto.VideoDTO;
 import com.nungil.Json.JsonKMDB;
-import com.nungil.Json.JsonKMDBData;
 import com.nungil.Json.JsonVideo;
 import com.nungil.Repository.ApiVideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,16 +18,14 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.IntStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -67,14 +64,14 @@ public class VideoService {
         String formattedDate = today.withDayOfMonth(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         return "http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp?" +
-                "collection=kmdb_new2&detail=Y&listCount=300&releaseDts=" + formattedDate +
+                "collection=kmdb_new2&detail=Y&listCount=300&ratedYn=y&releaseDts=" + formattedDate +
                 "&ServiceKey=" + serviceKey;
     }
 
     public void searchDataFromApi(String keyword) throws IOException {
 
         String apiUrl = "http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp?" +
-                "collection=kmdb_new2&detail=Y&listCount=500&title=" + keyword + "&ServiceKey=" + serviceKey;
+                "collection=kmdb_new2&detail=Y&listCount=500&ratedYn=y&query=" + keyword + "&ServiceKey=" + serviceKey;
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.getForObject(apiUrl, String.class);
 
@@ -105,7 +102,10 @@ public class VideoService {
                 sb.append(c); // 정상적인 문자만 추가
             }
         }
-        return sb.toString();
+        return sb.toString()
+                .replaceAll("!HE", "")
+                .replaceAll("!HS", "")
+                .replaceAll(" {2,}", " ");
     }
 
     public List<JsonVideo> getDataFromJsonContent(String jsonContent) throws IOException {
@@ -134,9 +134,9 @@ public class VideoService {
             // commCode가 null이거나 빈 값인 경우 title과 prodYear로 중복 검사
             if (document.getCommCode() == null || document.getCommCode().isEmpty()) {
                 // title과 prodYear가 동일한 document가 DB에 이미 있는지 확인
-                boolean exists = videoRepository.existsByTitleAndReleaseDate(document.getTitle(), document.getReleaseDate());
+                boolean exists = videoRepository.existsByTitleAndProdYear(document.getTitle(), document.getProdYear());
                 if (exists) {
-                    System.out.println("Duplicate title and ReleaseDate detected: " + document.getTitle() + " - " + document.getReleaseDate());
+                    System.out.println("Duplicate title and ProdYear detected: " + document.getTitle() + " - " + document.getProdYear());
                     continue; // 이미 존재하면 저장하지 않고 넘어감
                 }
             } else {
