@@ -89,7 +89,7 @@ public class JsonVideo {
         this.transferData();
         return VideoDocument.builder()
                 .commCode(commCodes != null && !commCodes.getCodeList().isEmpty() ? commCodes.getCodeList().get(0).getCodeNo() : null)
-                .title(title)
+                .title(title.replaceAll("!HE","").replaceAll("!HS","").replaceAll(" {2,}"," ").trim())
                 .titleEng(titleEng)
                 .titleOrg(titleOrg)
                 .titleEtc(titleEtc)
@@ -132,7 +132,9 @@ public class JsonVideo {
         if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
         if (rating != null && !rating.isEmpty()) {
             rating = rating.replaceAll("세", "세 ").replaceAll("관", " 관");
-            rating = rating.replaceAll("세  관", "세 이상 관");
+            rating = rating.replaceAll(" {2}"," ");
+            rating = rating.replaceAll("세 {2}관", "세 이상 관");
+            if(rating.contains("18")) rating = "청소년 관람불가";
         }
         if (nation.contains(",")) nation = nation.replaceAll(",", ", ");
 

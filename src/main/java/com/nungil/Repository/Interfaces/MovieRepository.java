@@ -19,6 +19,8 @@ import java.util.Optional;
  */
 @Repository
 public interface MovieRepository extends MongoRepository<MovieDocument, String> {
+
+    List<MovieDocument> findAll();
     // ✅ 대소문자 구분 없이 제목으로 영화 찾기
     Optional<MovieDocument> findByTitle(String title);
 
