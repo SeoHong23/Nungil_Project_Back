@@ -3,9 +3,9 @@ package com.nungil.Document;
 import com.nungil.Dto.StaffDTO;
 import com.nungil.Dto.VideoDTO;
 import com.nungil.Service.R2ImageService;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
@@ -14,16 +14,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
-@Builder
 @Data
+@Builder
 @Document(collection = "video")
 public class VideoDocument {
 
     @Id
     private String id; // MongoDB의 ObjectId 필드, 자동으로 생성됨
 
+    @Indexed(sparse = true, unique = true)
     private String commCode; // 외부코드
+
     private String title; // 영화명
     private String titleEng; // 영문제명
     private String titleOrg; // 원제명
@@ -45,7 +46,10 @@ public class VideoDocument {
     private String awards2;
     private List<String> keywords;
     private List<MovieDocument.OTTInfo> ottInfo;
+
+    @Indexed(sparse = true, unique = true)
     private Integer tmdbId;
+
     private boolean isCrawled = false;
     private Date lastCrawled;
 
@@ -193,4 +197,42 @@ public class VideoDocument {
         return makersMap;
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StaffDocument {
+
+        @Id
+        private String id;
+
+        private String staffNm;
+        private String staffRoleGroup;
+        private String staffRole;
+        private String staffId;
+
+        public StaffDTO toDTO() {
+            return StaffDTO.builder()
+                    .id(id)
+                    .staffNm(staffNm)
+                    .staffRoleGroup(staffRoleGroup)
+                    .staffRole(staffRole)
+                    .staffId(staffId)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Document(collection = "plot")
+    public static class PlotDocument {
+
+        @Id
+        private String id;
+
+        private String plotLang;
+
+        @Getter
+        private String plotText;
+
+    }
 }

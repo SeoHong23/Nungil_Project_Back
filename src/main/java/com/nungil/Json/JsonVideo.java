@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.seg.common.Term;
-import com.nungil.Document.PlotDocument;
-import com.nungil.Document.StaffDocument;
 import com.nungil.Document.VideoDocument;
 import lombok.Data;
 import lombok.Getter;
@@ -89,10 +87,10 @@ public class JsonVideo {
         this.transferData();
         return VideoDocument.builder()
                 .commCode(commCodes != null && !commCodes.getCodeList().isEmpty() ? commCodes.getCodeList().get(0).getCodeNo() : null)
-                .title(title.replaceAll("!HE","").replaceAll("!HS","").replaceAll(" {2,}"," ").trim())
-                .titleEng(titleEng)
-                .titleOrg(titleOrg)
-                .titleEtc(titleEtc)
+                .title(title.trim())
+                .titleEng(titleEng.trim())
+                .titleOrg(titleOrg.trim())
+                .titleEtc(titleEtc.trim())
                 .prodYear(prodYear)
                 .nation(nation)
                 .company(company != null ? Arrays.stream(company.split(","))
@@ -124,7 +122,7 @@ public class JsonVideo {
 
     private void transferData() {
         title = title.trim();
-        if(titleEng != null) {
+        if (titleEng != null) {
             titleEng = titleEng.replaceAll("\\s?\\([^)]*\\)", "");
             titleEng = titleEng.trim();
         }
@@ -132,164 +130,166 @@ public class JsonVideo {
         if (genre.contains("코메디")) genre = genre.replaceAll("코메디", "코미디");
         if (rating != null && !rating.isEmpty()) {
             rating = rating.replaceAll("세", "세 ").replaceAll("관", " 관");
-            rating = rating.replaceAll(" {2}"," ");
+            rating = rating.replaceAll(" {2}", " ");
             rating = rating.replaceAll("세 {2}관", "세 이상 관");
-            if(rating.contains("18")) rating = "청소년 관람불가";
+            if (rating.contains("18")) rating = "청소년 관람불가";
         }
         if (nation.contains(",")) nation = nation.replaceAll(",", ", ");
 
         nation = nation.replaceAll("대한민국", "한국");
     }
 
-
-}
-
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-class PlotWrapper {
-    @JsonProperty("plot")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<Plot> plotList = new ArrayList<>();
-}
-
-@Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-class Plot {
-    @JsonProperty("plotLang")
-    private String plotLang;
-
-    @JsonProperty("plotText")
-    private String plotText;
-
-    PlotDocument toDocument() {
-        return PlotDocument.builder()
-                .plotText(transferPlot(plotText))
-                .plotLang(plotLang)
-                .build();
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class PlotWrapper {
+        @JsonProperty("plot")
+        @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+        private List<Plot> plotList = new ArrayList<>();
     }
 
-    private String transferPlot(String inputText) {
-        if (inputText == null || inputText.isEmpty()) {
-            return "";
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class Plot {
+        @JsonProperty("plotLang")
+        private String plotLang;
+
+        @JsonProperty("plotText")
+        private String plotText;
+
+        VideoDocument.PlotDocument toDocument() {
+            return VideoDocument.PlotDocument.builder()
+                    .plotText(transferPlot(plotText))
+                    .plotLang(plotLang)
+                    .build();
         }
 
-        // 괄호와 괄호 안의 내용을 먼저 제거
-        inputText = removeParentheses(inputText).replaceAll("\\.{3,}","….");
-        // 작은 따옴표와 특수 따옴표를 제거 (안의 내용은 남김)
-        inputText = removeQuotationMarks(inputText);
-
-        final List<String> noSpaceBefore = Arrays.asList(".", ",", "!", "?", "…", ")", "”");
-        final List<String> noSpaceAfter = Arrays.asList("(", "“");
-
-        // HanLP로 토큰화 (각 Term에는 단어 정보가 들어 있음)
-        List<Term> terms = HanLP.segment(inputText);
-        StringBuilder sb = getStringBuilder(terms, noSpaceBefore, noSpaceAfter);
-        // 긴 공백 자르기
-        String result = sb.toString().trim().replaceAll("\\s+", " ");
-        result = result.replaceAll("([.!?])([^\\s])", "$1 $2"); // 문장 부호 뒤에 공백 추가
-
-        return result;
-    }
-
-    private String removeParentheses(String inputText) {
-        if (inputText == null || inputText.isEmpty()) {
-            return "";
-        }
-        // 둥근 괄호 안의 내용 제거
-        inputText = inputText.replaceAll("\\([^)]*\\)", "");
-        // 대괄호 안의 내용 제거
-        inputText = inputText.replaceAll("\\[[^\\]]*\\]", "");
-        // 중괄호 안의 내용 제거
-        inputText = inputText.replaceAll("\\{[^}]*\\}", "");
-        return inputText;
-    }
-
-    // 작은 따옴표, 특수 따옴표 제거 (안의 내용은 그대로 두기)
-    private String removeQuotationMarks(String inputText) {
-        if (inputText == null || inputText.isEmpty()) {
-            return "";
-        }
-
-        inputText = inputText.replaceAll("(?<=\\S)['‘’]+(?=\\S)", ""); // 단어와 단어 사이의 작은 따옴표와 특수 따옴표 제거
-        inputText = inputText.replaceAll("['‘’]+", ""); // 작은 따옴표와 특수 따옴표를 모두 제거
-
-        return inputText;
-    }
-
-    @NotNull
-    private static StringBuilder getStringBuilder(List<Term> terms, List<String> noSpaceBefore, List<String> noSpaceAfter) {
-        StringBuilder sb = new StringBuilder();
-        String prev = "";
-
-        for (Term term : terms) {
-            String token = term.word;
-
-            if (!sb.isEmpty() && noSpaceBefore.contains(token)) {
-                sb.append(token);
-            } else {
-                if (!sb.isEmpty() && !noSpaceAfter.contains(prev)) {
-                    sb.append(" ");
-                }
-                sb.append(token);
+        private String transferPlot(String inputText) {
+            if (inputText == null || inputText.isEmpty()) {
+                return "";
             }
-            prev = token;
+
+            // 괄호와 괄호 안의 내용을 먼저 제거
+            inputText = removeParentheses(inputText).replaceAll("\\.{3,}", "….");
+            // 작은 따옴표와 특수 따옴표를 제거 (안의 내용은 남김)
+            inputText = removeQuotationMarks(inputText);
+
+            final List<String> noSpaceBefore = Arrays.asList(".", ",", "!", "?", "…", ")", "”");
+            final List<String> noSpaceAfter = Arrays.asList("(", "“");
+
+            // HanLP로 토큰화 (각 Term에는 단어 정보가 들어 있음)
+            List<Term> terms = HanLP.segment(inputText);
+            StringBuilder sb = getStringBuilder(terms, noSpaceBefore, noSpaceAfter);
+            // 긴 공백 자르기
+            String result = sb.toString().trim().replaceAll("\\s+", " ");
+            result = result.replaceAll("([.!?])([^\\s])", "$1 $2"); // 문장 부호 뒤에 공백 추가
+
+            return result;
         }
-        return sb;
+
+        private String removeParentheses(String inputText) {
+            if (inputText == null || inputText.isEmpty()) {
+                return "";
+            }
+            // 둥근 괄호 안의 내용 제거
+            inputText = inputText.replaceAll("\\([^)]*\\)", "");
+            // 대괄호 안의 내용 제거
+            inputText = inputText.replaceAll("\\[[^\\]]*\\]", "");
+            // 중괄호 안의 내용 제거
+            inputText = inputText.replaceAll("\\{[^}]*\\}", "");
+            return inputText;
+        }
+
+        // 작은 따옴표, 특수 따옴표 제거 (안의 내용은 그대로 두기)
+        private String removeQuotationMarks(String inputText) {
+            if (inputText == null || inputText.isEmpty()) {
+                return "";
+            }
+
+            inputText = inputText.replaceAll("(?<=\\S)['‘’]+(?=\\S)", ""); // 단어와 단어 사이의 작은 따옴표와 특수 따옴표 제거
+            inputText = inputText.replaceAll("['‘’]+", ""); // 작은 따옴표와 특수 따옴표를 모두 제거
+
+            return inputText;
+        }
+
+        @NotNull
+        private static StringBuilder getStringBuilder(List<Term> terms, List<String> noSpaceBefore, List<String> noSpaceAfter) {
+            StringBuilder sb = new StringBuilder();
+            String prev = "";
+
+            for (Term term : terms) {
+                String token = term.word;
+
+                if (!sb.isEmpty() && noSpaceBefore.contains(token)) {
+                    sb.append(token);
+                } else {
+                    if (!sb.isEmpty() && !noSpaceAfter.contains(prev)) {
+                        sb.append(" ");
+                    }
+                    sb.append(token);
+                }
+                prev = token;
+            }
+            return sb;
+        }
+    }
+
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class StaffWrapper {
+        @JsonProperty("staff")
+        @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+        private List<Staff> staffList = new ArrayList<>();
+    }
+
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class Staff {
+        @JsonProperty("staffNm")
+        private String staffNm;
+
+        @JsonProperty("staffEnNm")
+        private String staffEnNm;
+
+        @JsonProperty("staffRoleGroup")
+        private String staffRoleGroup;
+
+        @JsonProperty("staffRole")
+        private String staffRole;
+
+        @JsonProperty("staffEtc")
+        private String staffEtc;
+
+        @JsonProperty("staffId")
+        private String staffId;
+
+        VideoDocument.StaffDocument toDocument() {
+            return VideoDocument.StaffDocument.builder()
+                    .staffNm(staffNm)
+                    .staffId(staffId)
+                    .staffRoleGroup(staffRoleGroup)
+                    .staffRole(staffRole)
+                    .build();
+        }
+    }
+
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class CodeWrapper {
+        @JsonProperty("CommCode")
+        @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+        private List<Code> codeList = new ArrayList<>();
+    }
+
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class Code {
+        @JsonProperty("CodeNo")
+        private String codeNo;
+
+
     }
 }
 
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-class StaffWrapper {
-    @JsonProperty("staff")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<Staff> staffList = new ArrayList<>();
-}
-
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-class Staff {
-    @JsonProperty("staffNm")
-    private String staffNm;
-
-    @JsonProperty("staffEnNm")
-    private String staffEnNm;
-
-    @JsonProperty("staffRoleGroup")
-    private String staffRoleGroup;
-
-    @JsonProperty("staffRole")
-    private String staffRole;
-
-    @JsonProperty("staffEtc")
-    private String staffEtc;
-
-    @JsonProperty("staffId")
-    private String staffId;
-
-    StaffDocument toDocument() {
-        return StaffDocument.builder()
-                .staffNm(staffNm)
-                .staffId(staffId)
-                .staffRoleGroup(staffRoleGroup)
-                .staffRole(staffRole)
-                .build();
-    }
-}
-
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-class CodeWrapper {
-    @JsonProperty("CommCode")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<Code> codeList = new ArrayList<>();
-}
-
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-class Code {
-    @JsonProperty("CodeNo")
-    private String codeNo;
 
 
-}
+

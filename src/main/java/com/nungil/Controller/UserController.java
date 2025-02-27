@@ -1,6 +1,9 @@
 package com.nungil.Controller;
 
+import com.nungil.Dto.ReactionDTO;
+import com.nungil.Dto.SyncRequestDTO;
 import com.nungil.Dto.UserDTO;
+import com.nungil.Service.ReactionService;
 import com.nungil.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -10,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
@@ -19,6 +23,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final ReactionService reactionService;
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserDTO userDTO) {
@@ -69,6 +74,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response); // JSON 형식으로 반환
         }
     }
+
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
         boolean exists = userService.isEmailAlreadyRegistered(email);
@@ -111,5 +117,17 @@ public class UserController {
         log.debug("✅ 컨트롤러 - findByKakaoId 결과: {}", user);
         return ResponseEntity.ok(user);
     }
+
+    @PostMapping("/sync/{id}")
+    public ResponseEntity<List<ReactionDTO>> syncUser(
+            @PathVariable("id") int id,
+            @RequestBody SyncRequestDTO syncRequestDTO) {
+
+        syncRequestDTO.setUserId(id);
+        List<ReactionDTO> reactions = reactionService.syncReactions(syncRequestDTO);
+
+        return ResponseEntity.ok(reactions);
+    }
+
 
 }
