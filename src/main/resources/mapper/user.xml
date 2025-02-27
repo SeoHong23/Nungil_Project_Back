@@ -20,5 +20,13 @@
         FROM users
         WHERE email = #{email}
     </select>
+    <select id="findByKakaoId" parameterType="Long" resultType="com.nungil.Dto.UserDTO">
+        SELECT * FROM users WHERE kakao_id = #{kakaoId}
+    </select>
+    <insert id="save" parameterType="com.nungil.Dto.UserDTO">
+        INSERT INTO users (kakao_id, email, nickname, gender)
+        VALUES (#{kakaoId}, #{email}, #{nickname}, #{gender})
+    </insert>
+
 
 </mapper>

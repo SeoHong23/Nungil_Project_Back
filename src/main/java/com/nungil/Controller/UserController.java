@@ -76,16 +76,15 @@ public class UserController {
     }
 
     @PostMapping("/kakao/login")
-    public ResponseEntity<Map<String, Object>> kakaoLogin(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<Map<String, Object>> kakaoLogin(@RequestBody Map<String, String> request) {
+        log.info("✅ 카카오 로그인 요청 도착! 데이터: {}", request);
+
         Map<String, Object> response = new HashMap<>();
         try {
+            String accessToken = request.get("accessToken");
+            log.info("카카오 액세스 토큰: {}", accessToken);
 
-            if (userDTO.getGender() == null) {
-                response.put("message", "Gender is required");
-                return ResponseEntity.badRequest().body(response);
-            }
-            System.out.println("Received kakao login request: " + userDTO);
-            UserDTO user = (UserDTO) userService.findOrCreateKakaoUser(userDTO);
+            UserDTO user = userService.findOrCreateKakaoUser(accessToken);
 
             response.put("message", "Login successful");
             response.put("userId", user.getUserid());
@@ -97,13 +96,20 @@ public class UserController {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            log.error("카카오 로그인 처리 중 오류 발생", e);
             System.out.println("Error in kakao login: " + e.getMessage());
+            e.printStackTrace();
             response.put("message", "Login failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-
-
     }
 
+    @GetMapping("/user/kakao/{kakaoId}")
+    public ResponseEntity<UserDTO> findByKakaoIdTest(@PathVariable Long kakaoId) {
+        log.debug("🔍 컨트롤러 - findByKakaoId 호출: kakaoId = {}", kakaoId);
+        UserDTO user = userService.getUserByKakaoId(kakaoId);
+        log.debug("✅ 컨트롤러 - findByKakaoId 결과: {}", user);
+        return ResponseEntity.ok(user);
+    }
 
 }
