@@ -1,0 +1,22 @@
+    <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+            "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.nungil.Repository.Interfaces.SettingRepository">
+
+        <insert id="insertSetting">
+            INSERT INTO setting (user_id, is_alert) VALUES (#{userId}, '0');
+        </insert>
+
+
+    <select id="selectSettingByUID" resultType="com.nungil.Dto.SettingDTO">
+        SELECT * FROM setting WHERE user_id = #{userId};
+    </select>
+
+    <update id="updateSetting">
+        UPDATE setting
+        SET
+            is_alert = #{setting.isAlert}
+        WHERE user_id = #{userId};
+    </update>
+
+    </mapper>
