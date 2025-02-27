@@ -90,7 +90,7 @@ public class UserController {
             response.put("userId", user.getUserid());
             response.put("email", user.getEmail());
             response.put("nickname", user.getNickname());
-            response.put("birthYear", user.getBirthDate());
+            response.put("birthDate", user.getBirthDate());
             response.put("gender", user.getGender().toString());
             response.put("admin", user.isAdmin());
 

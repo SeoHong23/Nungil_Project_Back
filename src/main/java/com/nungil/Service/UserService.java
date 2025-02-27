@@ -92,7 +92,7 @@ public class UserService {
             String email = kakaoAccount.has("email") ? kakaoAccount.getString("email") : kakaoId + "@kakao.user";
             JSONObject profile = kakaoAccount.getJSONObject("profile");
             String nickname = profile.getString("nickname");
-
+            int birthDate = kakaoAccount.getInt("birthDate");
             Gender gender = Gender.MALE; // 기본값
             if (kakaoAccount.has("gender")) {
                 String genderStr = kakaoAccount.getString("gender").toUpperCase();
@@ -112,6 +112,7 @@ public class UserService {
                 userDTO.setNickname(nickname);
                 userDTO.setGender(gender);
                 userDTO.setKakaoId(kakaoId);
+                userDTO.setBirthDate(birthDate);
                 // 사용자 등록 (예: 비밀번호는 카카오에서 제공하지 않으므로 임의로 설정)
                 userDTO.setPassword("defaultPassword");  // 비밀번호는 임의로 설정
                 int result = userRepository.save(userDTO);
