@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Document(collection = "review")
 public class ReviewDocument {
     @Id
-    private Long reviewId;
+    private String id;
     private Long userId;
     private int movieId;
     private String nick; // 작성자 닉네임

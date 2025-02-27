@@ -19,5 +19,6 @@ public class RankingCacheDocument {
 
     private String type;
 
+    @Builder.Default
     private Instant createdAt = Instant.now(); // TTL 적용을 위한 생성 시간
 }
