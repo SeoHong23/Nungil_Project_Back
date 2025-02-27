@@ -92,15 +92,26 @@ public class UserService {
             String email = kakaoAccount.has("email") ? kakaoAccount.getString("email") : kakaoId + "@kakao.user";
             JSONObject profile = kakaoAccount.getJSONObject("profile");
             String nickname = profile.getString("nickname");
-            int birthDate = kakaoAccount.getInt("birthDate");
-            Gender gender = Gender.MALE; // 기본값
+
+            int birthDate = 0;
+
+            if (kakaoAccount.has("birthDate")) {
+                birthDate = kakaoAccount.getInt("birthDate");
+            } else if (kakaoAccount.has("birthyear") && kakaoAccount.has("birthday")) {
+                String birthyear = kakaoAccount.getString("birthyear");
+                String birthday = kakaoAccount.getString("birthday");
+                birthDate = Integer.parseInt(birthyear + birthday);
+            } else if (kakaoAccount.has("birthday")) {
+                birthDate = Integer.parseInt(kakaoAccount.getString("birthday"));
+            }
+
+            Gender gender = Gender.MALE;
             if (kakaoAccount.has("gender")) {
                 String genderStr = kakaoAccount.getString("gender").toUpperCase();
                 if (genderStr.equals("MALE") || genderStr.equals("FEMALE")) {
                     gender = Gender.valueOf(genderStr);
                 }
             }
-
             UserDTO userDTO = userRepository.findByKakaoId(kakaoId); // 여기서 호출
 
             if (userDTO != null) {
