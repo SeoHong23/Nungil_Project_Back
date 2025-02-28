@@ -98,6 +98,7 @@ public class UserController {
             response.put("nickname", user.getNickname());
             response.put("birthDate", user.getBirthDate());
             response.put("gender", user.getGender().toString());
+            response.put("access_token", accessToken);
             response.put("admin", user.isAdmin());
 
             return ResponseEntity.ok(response);
