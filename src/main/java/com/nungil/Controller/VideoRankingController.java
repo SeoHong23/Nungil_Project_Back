@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -23,9 +24,17 @@ public class VideoRankingController {
 
     @GetMapping("/daily")
     public List<VideoRankResponseDTO> getDailyRanking(@RequestParam(required = false) String date) {
-        // 파라미터가 없으면 오늘 날짜 사용
         if (date == null || date.isEmpty()) {
-            date = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            LocalDateTime now = LocalDateTime.now();
+            int currentHour = now.getHour();
+
+            // 자정(0시)부터 오전 4시(4시) 사이인 경우 2일 전 날짜로 설정
+            if (currentHour >= 0 && currentHour < 9) {
+                date = now.minusDays(2).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            } else {
+                // 그 외 시간대는 기존처럼 1일 전 날짜로 설정
+                date = now.minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            }
         }
         return videoService.getBoxOffice(date, "daily");
     }
@@ -43,9 +52,7 @@ public class VideoRankingController {
         } else {
             // 파라미터가 없을 경우, 오늘 날짜 기준으로 지난 주 일요일 계산
             LocalDate today = LocalDate.now();
-            LocalDate lastSunday = today.getDayOfWeek() == DayOfWeek.SUNDAY
-                    ? today
-                    : today.with(DayOfWeek.SUNDAY).minusWeeks(1);
+            LocalDate lastSunday = today.with(DayOfWeek.SUNDAY).minusWeeks(1);
             formattedDate = lastSunday.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         }
 
