@@ -1,4 +1,4 @@
-package com.nungil.Config;
+package com.nungil.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
