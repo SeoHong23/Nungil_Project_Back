@@ -123,8 +123,12 @@ public class UserController {
             @PathVariable("id") int id,
             @RequestBody SyncRequestDTO syncRequestDTO) {
 
+        System.out.println("Reaction : "+syncRequestDTO.getReactions());
+        System.out.println("DeletedItem : "+syncRequestDTO.getDeletedItems());
+
         syncRequestDTO.setUserId(id);
         List<ReactionDTO> reactions = reactionService.syncReactions(syncRequestDTO);
+        System.out.println("Reactions : "+reactions);
 
         return ResponseEntity.ok(reactions);
     }

@@ -71,7 +71,7 @@ public class VideoService {
     public void searchDataFromApi(String keyword) throws IOException {
 
         String apiUrl = "http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp?" +
-                "collection=kmdb_new2&detail=Y&listCount=500&ratedYn=y&query=" + keyword + "&ServiceKey=" + serviceKey;
+                "collection=kmdb_new2&detail=Y&listCount=500&ratedYn=y&title=" + keyword + "&ServiceKey=" + serviceKey;
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.getForObject(apiUrl, String.class);
 

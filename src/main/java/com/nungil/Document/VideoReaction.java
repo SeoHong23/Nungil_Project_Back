@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Data
 @Builder
@@ -27,7 +28,7 @@ import java.util.Date;
 public class VideoReaction {
 
     @Id
-    private String mongoId;
+    private String id;
 
     private int objectId;
 
@@ -55,7 +56,7 @@ public class VideoReaction {
 
         private boolean isBookmarked;
         private boolean isIgnored;
-        private boolean isLike;
+        private boolean isLiked;
         private boolean isDisliked;
         private boolean isWatching;
         private boolean isWatched;
@@ -65,7 +66,7 @@ public class VideoReaction {
     public ReactionDTO toDTO() {
         Reactions safeReactions = reactions != null ? reactions : new Reactions();
         return ReactionDTO.builder()
-                .mongoId(mongoId)
+                .mongoId(id)
                 .objectId(objectId)
                 .userId(userId)
                 .videoId(videoId)
@@ -73,7 +74,7 @@ public class VideoReaction {
                 .posterUrl(posterUrl)
                 .isBookmarked(safeReactions.isBookmarked())
                 .isIgnored(safeReactions.isIgnored())
-                .isLike(safeReactions.isLike())
+                .isLiked(safeReactions.isLiked())
                 .isDisliked(safeReactions.isDisliked())
                 .isWatching(safeReactions.isWatching())
                 .isWatched(safeReactions.isWatched())

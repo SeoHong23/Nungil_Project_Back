@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Objects;
 
 
 @Data
@@ -23,18 +24,16 @@ public class ReactionDTO {
     private String title;
     private String posterUrl;
 
-    private boolean isBookmarked;
-    private boolean isIgnored;
-    private boolean isLike;
-    private boolean isDisliked;
-    private boolean isWatching;
-    private boolean isWatched;
-
-    private Date updatedAt;
+    private Boolean isBookmarked;
+    private Boolean isIgnored;
+    private Boolean isLiked;
+    private Boolean isDisliked;
+    private Boolean isWatching;
+    private Boolean isWatched;
 
     public VideoReaction toDocument() {
         return VideoReaction.builder()
-                .mongoId(this.mongoId)
+                .id(Objects.equals(mongoId, "") ?null:this.mongoId)
                 .objectId(this.objectId)
                 .userId(this.userId)
                 .videoId(this.videoId)
@@ -43,12 +42,11 @@ public class ReactionDTO {
                 .reactions(VideoReaction.Reactions.builder()
                         .isBookmarked(this.isBookmarked)
                         .isIgnored(this.isIgnored)
-                        .isLike(this.isLike)
+                        .isLiked(this.isLiked)
                         .isDisliked(this.isDisliked)
                         .isWatching(this.isWatching)
                         .isWatched(this.isWatched)
                         .build())
-                .updatedAt(updatedAt)
                 .build();
     }
 
