@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class ReviewDTO {
     private Long reviewId;
     private Long userId;
-    private int movieId;
+    private String movieId;
     private String nick; // 작성자 닉네임
     private String content; // 리뷰 내용
     private double rating; // 평점
