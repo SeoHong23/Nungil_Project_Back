@@ -18,6 +18,15 @@ public class ReviewService {
     public void saveReview(ReviewDocument review) {
         review.setId(UUID.randomUUID().toString());
         review.setCreatedAt(LocalDateTime.now());
+
+        List<ReviewDocument> existingReviews = reviewRepository.findByUserIdAndMovieId(
+                review.getUserId(),
+                review.getMovieId()
+        );
+
+        if(!existingReviews.isEmpty()) {
+            throw new RuntimeException("이미 이 영화에 리뷰를 작성했습니다.");
+        }
         reviewRepository.save(review);
     }
 

@@ -36,7 +36,7 @@ public class MovieService {
         this.kinoService = kinoService;
     }
 
-    @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시 실행
+    @Scheduled(cron = "0 0 2 * * ?") // 매일 새벽 시 실행
 //    @Scheduled(fixedRate = 60000)
 
     public void scheduledMovieUpdate() {

@@ -50,19 +50,6 @@ public class CrawlerController {
 //    }
 //
 
-    /**
-     * mongodb에서 없을 시 kobisAPI호출해서 검색
-     */
-//    @GetMapping("/total")
-//    public ResponseEntity<?> searchOrFetchMovie(@RequestParam String title) {
-//        MovieDocument movie = movieService.searchOrFetchMovie(title);
-//
-//        if (movie == null) {
-//            return ResponseEntity.badRequest().body("🚨 검색 결과가 없고, KOBIS에서도 데이터를 가져올 수 없습니다.");
-//        }
-//
-//        return ResponseEntity.ok(movie); // 최종 영화 데이터 반환
-//    }
 
 }
 
