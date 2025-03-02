@@ -42,7 +42,7 @@ public class ReviewController {
     }
 
     @GetMapping("/{movieId}")
-    public ResponseEntity<List<ReviewDocument>> getReviews(@PathVariable int movieId) {
+    public ResponseEntity<List<ReviewDocument>> getReviews(@PathVariable String movieId) {
         return ResponseEntity.ok(reviewService.getReviews(movieId));
     }
 
