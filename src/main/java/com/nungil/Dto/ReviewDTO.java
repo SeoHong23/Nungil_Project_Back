@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 
 public class ReviewDTO {
-    private Long reviewId;
+    private String reviewId;
     private Long userId;
     private String movieId;
     private String nick; // 작성자 닉네임

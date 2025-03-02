@@ -30,7 +30,7 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
-    public List<ReviewDocument> getReviews (int movieId) {
+    public List<ReviewDocument> getReviews (String movieId) {
         return reviewRepository.findByMovieId(movieId);
     }
 }
