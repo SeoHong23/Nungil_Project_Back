@@ -60,7 +60,7 @@ public class ReviewService {
         if(existingReview.isPresent()) {
             ReviewDocument reviewDocument = existingReview.get();
 
-            if(existingReview.get().getUserId().equals(review.getUserId()) ) {
+            if(!existingReview.get().getUserId().equals(review.getUserId()) ) {
                 System.out.println("리뷰 수정 권한 없음: 요청 사용자 ID(" + review.getUserId() +")와 " +
                         "리뷰 작성자 ID(" + existingReview.get().getUserId() + ")가 일치 하지 않습니다.");
                 return false;
