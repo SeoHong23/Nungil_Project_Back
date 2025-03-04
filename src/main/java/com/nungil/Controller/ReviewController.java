@@ -56,6 +56,9 @@ public class ReviewController {
         } else {
             reviews = reviewService.getReviews(movieId);
         }
+        Map<String, Object> response = new HashMap<>();
+        response.put("count", reviews.size());
+        response.put("reviews", reviews);
 
         return ResponseEntity.ok(reviews);
     }
@@ -114,5 +117,10 @@ public class ReviewController {
         }
     }
 
+
+    @GetMapping("/count")
+    public long getReviewCount(@RequestParam String movieId) {
+        return reviewRepository.countByMovieId(movieId);
+    }
 
 }
