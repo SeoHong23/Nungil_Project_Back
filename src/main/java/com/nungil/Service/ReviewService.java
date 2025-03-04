@@ -4,6 +4,7 @@ import com.nungil.Document.ReviewDocument;
 import com.nungil.Document.ReviewLike;
 import com.nungil.Repository.Interfaces.ReviewLikeRepository;
 import com.nungil.Repository.Interfaces.ReviewRepository;
+import com.nungil.Repository.Interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewLikeRepository reviewLikeRepository;
+    private final UserRepository userRepository;
 
     public void saveReview(ReviewDocument review) {
         if (review.getNick() != null) {
@@ -36,6 +38,7 @@ public class ReviewService {
             throw new RuntimeException("이미 이 영화에 리뷰를 작성했습니다.");
         }
         reviewRepository.save(review);
+
     }
 
 

@@ -12,4 +12,5 @@ public interface ReviewRepository extends MongoRepository<ReviewDocument, String
     List<ReviewDocument> findByMovieId(String movieId);
     List<ReviewDocument> findByUserIdAndMovieId(Long userId, String movieId);
 
+    long countByMovieId(String movieId);
 }
