@@ -38,15 +38,16 @@ public class BannerController {
     }
 
     @GetMapping("/random")
-    public ResponseEntity<BannerDTO> ramdom() {
-        BannerDTO banners = bannerService.getRandomBanner();
+    public ResponseEntity<BannerDTO> ramdom(@RequestParam String type) {
+        BannerDTO banners = bannerService.getRandomBanner(type);
         return ResponseEntity.ok(banners);
     }
 
     @PostMapping("/insert")
     public ResponseEntity<Boolean> uploadBanner (
             @RequestParam("title") String title,
-            @RequestPart(value = "image") MultipartFile image) {
+            @RequestPart(value = "image") MultipartFile image,
+            @RequestParam("type") String type) {
         try {
 // 업로드 폴더가 없으면 생성
             Path uploadPath = Paths.get(BANNER_DIR);
@@ -64,7 +65,7 @@ public class BannerController {
                 image.transferTo(uploadFile);
                 System.out.println("✅ 이미지 저장 완료: " + uploadFile.getAbsolutePath());
 
-                bannerService.insertBanner(title, fileName);
+                bannerService.insertBanner(title, fileName, type);
 
 
             } else {

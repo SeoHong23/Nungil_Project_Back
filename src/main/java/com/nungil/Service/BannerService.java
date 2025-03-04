@@ -16,13 +16,13 @@ public class BannerService {
     private final BannerRepository bannerRepository;
 
 
-    public void insertBanner(String title, String fileName){
-        bannerRepository.insertBanner(title, fileName);
+    public void insertBanner(String title, String fileName, String type){
+        bannerRepository.insertBanner(title, fileName, type);
     }
 
     public List<BannerDTO> getAllBanner(){
         return bannerRepository.findAllBanner().stream().map(
-                banner -> new BannerDTO(banner.getId()+"", banner.getTitle(), banner.getFileName())).collect(Collectors.toList());
+                banner -> new BannerDTO(banner.getId()+"", banner.getTitle(), banner.getFileName(), banner.getType())).collect(Collectors.toList());
     }
 
     public BannerDTO getBannerById(int id){
@@ -33,7 +33,7 @@ public class BannerService {
         bannerRepository.deleteBanner(id);
     }
 
-    public BannerDTO getRandomBanner(){
-        return bannerRepository.randomBanner();
+    public BannerDTO getRandomBanner(String type){
+        return bannerRepository.randomBanner(type);
     }
 }
