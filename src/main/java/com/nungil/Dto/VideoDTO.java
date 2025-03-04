@@ -32,6 +32,8 @@ public class VideoDTO {
     private List<StaffDTO> cast; // 출연
     private Map<String, String> makers; // 제작자 투자자 제작사 배급사 수입사
     private Map<String,String> crew; // 이외
+    private Map<String,String> ottInfo;
+    private Map<String,String> theaterInfo;
 
     private String awards1;
     private String awards2;

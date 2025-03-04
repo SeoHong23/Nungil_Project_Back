@@ -52,6 +52,7 @@ public class VideoDocument {
     @Builder.Default
     private boolean isCrawled = false;
     private Date lastCrawled;
+    private List<String> theaterLinks;
 
     public void changeAllImgUrlHQ(R2ImageService r2ImageService) {
         posters = posters.stream()
@@ -110,6 +111,8 @@ public class VideoDocument {
                 .directors(this.getDirectors())
                 .makers(this.getMakers())
                 .crew(this.getCrew())
+                .ottInfo(this.getOttInfos())
+                .theaterInfo(this.getTheaterInfo())
                 .build();
     }
 
@@ -161,6 +164,51 @@ public class VideoDocument {
         }
 
         return directorsMap;
+    }
+
+    private Map<String, String> getOttInfos() {
+        Map<String, String> _ottInfoMap = new HashMap<>();
+
+        if(ottInfo != null) {
+            for(MovieDocument.OTTInfo ottInfo : ottInfo) {
+                _ottInfoMap.put(ottInfo.getPlatform(), ottInfo.getLink());
+            }
+        }
+        return _ottInfoMap;
+    }
+    private Map<String, String> getTheaterInfo() {
+        Map<String, String> _linkMap = new HashMap<>();
+
+        if(theaterLinks != null) {
+            for(String link : theaterLinks) {
+                String key = "";
+
+                String pattern = "www\\.([^.]+)\\.co\\.kr"; // www. 뒤의 문자열을 추출하는 정규식
+                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(pattern).matcher(link);
+                if (matcher.find()) {
+                    key =  matcher.group(1);
+                }
+
+                switch (key){
+                    case "megabox" :
+                        key = "메가박스";
+                        break;
+                    case "cgv" :
+                        key = "CGV";
+                        break;
+                    case "lottecinema" :
+                        key = "롯데시네마";
+                        break;
+                    case "sangsangmadang" :
+                        key = "KT&G 상상마당 시네마";
+                        break;
+                }
+
+                _linkMap.put(key, link);
+            }
+        }
+
+        return _linkMap;
     }
 
     private Map<String, String> getCrew() {
