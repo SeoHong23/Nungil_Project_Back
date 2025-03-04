@@ -64,7 +64,11 @@ public class UserService {
     }
 
     public UserDTO findUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        UserDTO user = userRepository.findByEmail(email);
+        if(user != null && user.getNickname() != null) {
+            user.setNickname(processNickname(user.getNickname()));
+        }
+            return user;
     }
 
     public UserDTO findOrCreateKakaoUser(String accessToken) {
@@ -144,6 +148,26 @@ public class UserService {
     public UserDTO getUserByKakaoId(Long kakaoId) {
         UserDTO user = userRepository.findByKakaoId(kakaoId);
         return user;
+    }
+
+
+    private String processNickname(String nickname) {
+        if (nickname == null) {
+            return null;
+        }
+
+        try {
+            byte[] bytes = nickname.getBytes("UTF-8");
+            String decodedNickname = new String(bytes, "UTF-8");
+
+            System.out.println("원래 닉네임: " + nickname);
+            System.out.println("처리된 닉네임: " + decodedNickname);
+
+            return decodedNickname;
+        } catch (Exception e) {
+            System.out.println("닉네임 인코딩 처리 중 오류 발생: " + e.getMessage());
+            return nickname;
+        }
     }
 
 }

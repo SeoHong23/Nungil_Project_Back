@@ -63,6 +63,8 @@ public class UserController {
             response.put("gender", user.getGender().toString());
             response.put("admin", user.isAdmin());
 
+            response.put("access_token", "dummy_token_for_email_login");
+
             // JSON 형식으로 반환
             return ResponseEntity.ok(response); // JSON 형식으로 반환
         } else {
