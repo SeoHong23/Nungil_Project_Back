@@ -7,6 +7,7 @@ import com.nungil.Repository.Interfaces.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,10 @@ public class ReviewService {
     private final ReviewLikeRepository reviewLikeRepository;
 
     public void saveReview(ReviewDocument review) {
+        if (review.getNick() != null) {
+            review.setNick(processNickname(review.getNick()));
+        }
+
         review.setId(UUID.randomUUID().toString());
         review.setCreatedAt(LocalDateTime.now());
 
@@ -33,19 +38,48 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
+
     public List<ReviewDocument> getReviews(String movieId) {
         List<ReviewDocument> reviews = reviewRepository.findByMovieId(movieId);
+        for (ReviewDocument review : reviews) {
+            if (review.getNick() != null) {
+                review.setNick(processNickname(review.getNick()));
+            }
+        }
         System.out.println("🔍 검색된 리뷰 개수: " + reviews.size());
         return reviews;
+    }
+
+    private String processNickname(String nickname) {
+        if (nickname == null) {
+            return null;
+        }
+
+        try {
+            // ISO-8859-1로 해석된 UTF-8 문자열을 다시 UTF-8로 변환
+            byte[] bytes = nickname.getBytes("ISO-8859-1");
+            String decodedNickname = new String(bytes, StandardCharsets.UTF_8);
+
+            System.out.println("원본 닉네임: " + nickname);
+            System.out.println("처리된 닉네임: " + decodedNickname);
+
+            return decodedNickname;
+        } catch (Exception e) {
+            System.out.println("닉네임 처리 오류: " + e.getMessage());
+            return nickname;
+        }
     }
 
     public List<ReviewDocument> getReviewsWithLikeStatus(String movieId, int userId) {
         List<ReviewDocument> reviews = reviewRepository.findByMovieId(movieId);
 
         for (ReviewDocument review : reviews) {
-            // 각 리뷰에 대해 현재 사용자의 좋아요 상태 설정
             boolean isLiked = reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId());
             review.setLiked(isLiked);
+
+            if (review.getNick() != null) {
+                review.setNick(processNickname(review.getNick()));
+            }
         }
 
         System.out.println("🔍 검색된 리뷰 개수: " + reviews.size() + " (좋아요 상태 포함)");
