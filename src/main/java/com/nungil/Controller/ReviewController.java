@@ -44,11 +44,9 @@ public class ReviewController {
     }
 
     @GetMapping("/{movieId}")
-    public ResponseEntity<List<ReviewDocument>> getReviews(
+    public ResponseEntity<Map<String, Object>> getReviews(
             @PathVariable String movieId,
-            @RequestParam( required = false) Integer userId) {
-
-        // 사용자 ID 가져오기 (실제로는 토큰에서 추출)
+            @RequestParam(required = false) Integer userId) {
 
         List<ReviewDocument> reviews;
         if (userId != null && userId > 0) {
@@ -60,9 +58,8 @@ public class ReviewController {
         response.put("count", reviews.size());
         response.put("reviews", reviews);
 
-        return ResponseEntity.ok(reviews);
+        return ResponseEntity.ok(response);
     }
-
 
     @PutMapping("/update")
     public ResponseEntity<String> updateReview(

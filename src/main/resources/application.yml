@@ -28,6 +28,10 @@ server:
         enabled: false
     servlet:
         context-path: /
+        encoding:
+            charset: UTF-8
+            force: true
+            enabled: true
 
 #    mybatis:
 #        config-location: classpath:mybatis/mybatis-config.xml
