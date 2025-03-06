@@ -28,13 +28,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserDTO userDTO) {
         try {
-            userService.registerUser(
-                    userDTO.getEmail(),
-                    userDTO.getPassword(),
-                    userDTO.getNickname(),
-                    userDTO.getGender(),
-                    userDTO.getBirthDate()
-            );
+            userService.registerUser(userDTO);
             return ResponseEntity.ok("User registered successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());  // 이메일 중복 시 에러 메시지 반환

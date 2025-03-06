@@ -1,5 +1,6 @@
 package com.nungil.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import com.nungil.Dto.UserDTO;
 import com.nungil.Enum.Gender;
@@ -7,6 +8,7 @@ import com.nungil.Repository.Interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,40 +16,32 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userMapper;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public boolean isEmailAlreadyRegistered(String email) {
         return userRepository.checkEmailExists(email);  // 이메일이 이미 등록되어 있는지 확인
     }
 
     // 회원가입
-    public void registerUser(String email, String password, String nickname, Gender gender, int birthDate) {
+    public void registerUser(UserDTO dto) {
         // 이메일 중복 체크
-        if (isEmailAlreadyRegistered(email)) {
+        if (isEmailAlreadyRegistered(dto.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");  // 중복된 이메일 처리
         }
 
-        // 이메일이 중복되지 않으면 사용자 등록
-        UserDTO user = new UserDTO();
-        user.setEmail(email);
-        user.setPassword(password);
-        user.setNickname(nickname);
-        user.setGender(gender);  // gender는 enum으로 설정
-        user.setBirthDate(birthDate);
+        String encodedPwd = passwordEncoder.encode(dto.getPassword());
+log.info("Not Encoded password: " + dto.getPassword());
+log.info("Encoded password: " + encodedPwd);
+        dto.setPassword(encodedPwd);
 
-        userRepository.insertUser(user);  // 사용자 등록
-    }
-
-
-    // 비밀번호 암호화 (여기서는 예시로 BCrypt를 사용)
-    private String encryptPassword(String password) {
-        // BCrypt 또는 다른 암호화 로직 사용
-        return password; // 암호화된 비밀번호 리턴 (예시)
+        userRepository.insertUser(dto);  // 사용자 등록
     }
 
     public boolean authenticateUser(String email, String password) {
@@ -56,9 +50,7 @@ public class UserService {
 
         if (userDTO != null) {
             System.out.println("User found: " + userDTO.getEmail()); // 디버깅
-            if (userDTO.getPassword().equals(password)) {
-                return true;
-            }
+            return passwordEncoder.matches(password, userDTO.getPassword());
         }
         return false;
     }
