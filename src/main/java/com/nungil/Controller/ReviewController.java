@@ -25,6 +25,13 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Map<String,Object>> getUserReviews(@PathVariable int userId) {
+        try {
+            List<ReviewDTO> reviews = reviewService.getReviews(userId);
+        }
+    }
+
     @PostMapping("/add")
     public ResponseEntity<String> createReview(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -44,13 +51,11 @@ public class ReviewController {
     }
 
     @GetMapping("/{movieId}")
-    public ResponseEntity<List<ReviewDocument>> getReviews(
+    public ResponseEntity<Map<String, Object>> getReviews(
             @PathVariable String movieId,
             @RequestParam( required = false) Integer userId) {
 
-        // 사용자 ID 가져오기 (실제로는 토큰에서 추출)
-
-        List<ReviewDocument> reviews;
+        List<ReviewDTO> reviews;
         if (userId != null && userId > 0) {
             reviews = reviewService.getReviewsWithLikeStatus(movieId, userId);
         } else {
@@ -60,7 +65,7 @@ public class ReviewController {
         response.put("count", reviews.size());
         response.put("reviews", reviews);
 
-        return ResponseEntity.ok(reviews);
+        return ResponseEntity.ok(response);
     }
 
 

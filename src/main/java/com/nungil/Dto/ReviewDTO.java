@@ -15,6 +15,7 @@ public class ReviewDTO {
     private String reviewId;
     private Long userId;
     private String movieId;
+    private String movieTitle;
     private String nick; // 작성자 닉네임
     private String content; // 리뷰 내용
     private double rating; // 평점
