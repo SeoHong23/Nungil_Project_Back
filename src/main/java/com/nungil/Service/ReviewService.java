@@ -132,6 +132,31 @@ public class ReviewService {
         }).collect(Collectors.toList());
     }
 
+    public List<ReviewDTO> getUserReviews(int userId) {
+        List<ReviewDocument> reviews = reviewRepository.findByUserId(userId);
+
+        return reviews.stream().map(review -> {
+            String movieTitle = movieRepository.findById(review.getMovieId())
+                    .map(MovieDocument::getTitle)
+                    .orElse("제목 없음");
+
+            return new ReviewDTO(
+                    review.getId(),
+                    review.getUserId(),
+                    review.getMovieId(),
+                    movieTitle,
+                    review.getNick(),
+                    review.getContent(),
+                    review.getRating(),
+                    review.getCreatedAt(),
+                    review.getLikeCount(),
+                    review.isLiked()
+            );
+        }).collect(Collectors.toList());
+    }
+
+
+
     public boolean updateReview(ReviewDocument review) {
         Optional<ReviewDocument> existingReview = reviewRepository.findById(review.getId());
 
