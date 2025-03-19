@@ -78,6 +78,7 @@ public class ReviewController {
     @PutMapping("/update")
     public ResponseEntity<String> updateReview(
 //            @RequestHeader(value = "Authorization", required = false) String authHeader,
+//            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody ReviewDocument review) {
         try {
 //            String token = authHeader != null && authHeader.startsWith("Bearer")
