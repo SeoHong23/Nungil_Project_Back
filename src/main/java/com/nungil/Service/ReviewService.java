@@ -1,7 +1,12 @@
 package com.nungil.Service;
 
+import com.nungil.Document.MovieDocument;
 import com.nungil.Document.ReviewDocument;
 import com.nungil.Document.ReviewLike;
+import com.nungil.Repository.Interfaces.MovieRepository;
+import com.nungil.Document.VideoDocument;
+import com.nungil.Dto.ReviewDTO;
+import com.nungil.Repository.Interfaces.MovieRepository;
 import com.nungil.Repository.Interfaces.ReviewLikeRepository;
 import com.nungil.Repository.Interfaces.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +16,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
     private final ReviewRepository reviewRepository;
+    private final MovieRepository movieRepository;
     private final ReviewLikeRepository reviewLikeRepository;
 
     public void saveReview(ReviewDocument review) {
@@ -33,26 +40,97 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
-    public List<ReviewDocument> getReviews(String movieId) {
+
+    public List<ReviewDTO> getReviews(String movieId) {
         List<ReviewDocument> reviews = reviewRepository.findByMovieId(movieId);
-        System.out.println("🔍 검색된 리뷰 개수: " + reviews.size());
-        return reviews;
+
+        return reviews.stream().map(review -> {
+            // ✅ MongoDB에서 movieId로 영화 제목 가져오기
+            String movieTitle = movieRepository.findById(review.getMovieId())
+                    .map(MovieDocument::getTitle)
+                    .orElse("제목 없음"); // 제목이 없으면 기본값 설정
+
+            if (review.getNick() != null) {
+                review.setNick(processNickname(review.getNick()));
+            }
+
+            // ✅ movieTitle을 포함한 DTO 반환
+            return new ReviewDTO(
+                    review.getId(),
+                    review.getUserId(),
+                    review.getMovieId(),
+                    movieTitle, // ✅ 추가된 영화 제목
+                    review.getNick(),
+                    review.getContent(),
+                    review.getRating(),
+                    review.getCreatedAt(),
+                    review.getLikeCount(),
+                    review.isLiked()
+            );
+        }).collect(Collectors.toList());
     }
 
-    public List<ReviewDocument> getReviewsWithLikeStatus(String movieId, int userId) {
-        List<ReviewDocument> reviews = reviewRepository.findByMovieId(movieId);
 
-        for (ReviewDocument review : reviews) {
-            // 각 리뷰에 대해 현재 사용자의 좋아요 상태 설정
-            boolean isLiked = reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId());
-            review.setLiked(isLiked);
+
+//        for (ReviewDocument review : reviews) {
+//            if (review.getNick() != null) {
+//                review.setNick(processNickname(review.getNick()));
+//            }
+//        }
+//        System.out.println("🔍 검색된 리뷰 개수: " + reviews.size());
+//        return reviews;
+//    }
+
+    private String processNickname(String nickname) {
+        if (nickname == null) {
+            return null;
         }
 
-        System.out.println("🔍 검색된 리뷰 개수: " + reviews.size() + " (좋아요 상태 포함)");
-        return reviews;
+        try {
+            // ISO-8859-1로 해석된 UTF-8 문자열을 다시 UTF-8로 변환
+            byte[] bytes = nickname.getBytes("ISO-8859-1");
+            String decodedNickname = new String(bytes, StandardCharsets.UTF_8);
+
+            System.out.println("원본 닉네임: " + nickname);
+            System.out.println("처리된 닉네임: " + decodedNickname);
+
+            return decodedNickname;
+        } catch (Exception e) {
+            System.out.println("닉네임 처리 오류: " + e.getMessage());
+            return nickname;
+        }
     }
 
+    public List<ReviewDTO> getReviewsWithLikeStatus(String movieId, int userId) {
+        List<ReviewDocument> reviews = reviewRepository.findByMovieId(movieId);
 
+        return reviews.stream().map(review -> {
+            String movieTitle = movieRepository.findById(review.getMovieId())
+                    .map(MovieDocument::getTitle)
+                    .orElse("제목 없음");
+
+            boolean isLiked = reviewLikeRepository.existsByUserIdAndReviewId(userId, review.getId());
+
+            if (review.getNick() != null) {
+                review.setNick(processNickname(review.getNick()));
+            }
+
+
+
+            return new ReviewDTO(
+                    review.getId(),
+                    review.getUserId(),
+                    review.getMovieId(),
+                    movieTitle,
+                    review.getNick(),
+                    review.getContent(),
+                    review.getRating(),
+                    review.getCreatedAt(),
+                    review.getLikeCount(),
+                    isLiked
+            );
+        }).collect(Collectors.toList());
+    }
 
     public boolean updateReview(ReviewDocument review) {
         Optional<ReviewDocument> existingReview = reviewRepository.findById(review.getId());

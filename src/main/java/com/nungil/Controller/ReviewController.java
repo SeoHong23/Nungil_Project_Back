@@ -25,6 +25,13 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Map<String,Object>> getUserReviews(@PathVariable int userId) {
+        try {
+            List<ReviewDTO> reviews = reviewService.getReviews(userId);
+        }
+    }
+
     @PostMapping("/add")
     public ResponseEntity<String> createReview(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -46,9 +53,12 @@ public class ReviewController {
     @GetMapping("/{movieId}")
     public ResponseEntity<Map<String, Object>> getReviews(
             @PathVariable String movieId,
-            @RequestParam(required = false) Integer userId) {
 
-        List<ReviewDocument> reviews;
+            @RequestParam( required = false) Integer userId) {
+
+        List<ReviewDTO> reviews;
+
+
         if (userId != null && userId > 0) {
             reviews = reviewService.getReviewsWithLikeStatus(movieId, userId);
         } else {
