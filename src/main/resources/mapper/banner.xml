@@ -4,7 +4,7 @@
     <mapper namespace="com.nungil.Repository.Interfaces.BannerRepository">
 
         <insert id="insertBanner">
-            INSERT INTO banner (title, fileName) VALUES (#{title}, #{fileName});
+            INSERT INTO banner (title, fileName, type) VALUES (#{title}, #{fileName}, #{type});
         </insert>
 
     <select id="findAllBanner">
@@ -20,7 +20,7 @@
     </delete>
 
     <select id="randomBanner" resultType="com.nungil.Dto.BannerDTO">
-        SELECT * FROM banner ORDER BY RAND() LIMIT 1;
+        SELECT * FROM banner WHERE type = #{type} ORDER BY RAND() LIMIT 1;
     </select>
 
     </mapper>

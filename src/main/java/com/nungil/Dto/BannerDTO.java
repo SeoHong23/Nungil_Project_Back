@@ -11,4 +11,5 @@ public class BannerDTO {
     private String id;
     private String title;
     private String fileName;
+    private String type;
 }
