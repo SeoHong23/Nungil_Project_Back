@@ -27,9 +27,15 @@ public class ReviewController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<Map<String,Object>> getUserReviews(@PathVariable int userId) {
-        try {
-            List<ReviewDTO> reviews = reviewService.getReviews(userId);
-        }
+
+            List<ReviewDTO> reviews = reviewService.getUserReviews(userId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("count", reviews.size());
+            response.put("reviews", reviews);
+
+            return ResponseEntity.ok(response);
+
     }
 
     @PostMapping("/add")
