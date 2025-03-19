@@ -9,11 +9,9 @@ import com.nungil.Dto.ReviewDTO;
 import com.nungil.Repository.Interfaces.MovieRepository;
 import com.nungil.Repository.Interfaces.ReviewLikeRepository;
 import com.nungil.Repository.Interfaces.ReviewRepository;
-import com.nungil.Repository.Interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -26,13 +24,8 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final ReviewLikeRepository reviewLikeRepository;
-    private final UserRepository userRepository;
 
     public void saveReview(ReviewDocument review) {
-        if (review.getNick() != null) {
-            review.setNick(processNickname(review.getNick()));
-        }
-
         review.setId(UUID.randomUUID().toString());
         review.setCreatedAt(LocalDateTime.now());
 
@@ -45,7 +38,6 @@ public class ReviewService {
             throw new RuntimeException("이미 이 영화에 리뷰를 작성했습니다.");
         }
         reviewRepository.save(review);
-
     }
 
 
@@ -122,6 +114,8 @@ public class ReviewService {
             if (review.getNick() != null) {
                 review.setNick(processNickname(review.getNick()));
             }
+
+
 
             return new ReviewDTO(
                     review.getId(),

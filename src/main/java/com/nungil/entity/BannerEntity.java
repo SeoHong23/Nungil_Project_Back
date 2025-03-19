@@ -18,4 +18,5 @@ public class BannerEntity {
     private int id;           // MongoDB에서 사용되는 고유 ID
     private String title;
     private String fileName;
+    private String type;
 }

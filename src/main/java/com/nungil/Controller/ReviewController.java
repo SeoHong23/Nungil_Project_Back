@@ -53,9 +53,12 @@ public class ReviewController {
     @GetMapping("/{movieId}")
     public ResponseEntity<Map<String, Object>> getReviews(
             @PathVariable String movieId,
+
             @RequestParam( required = false) Integer userId) {
 
         List<ReviewDTO> reviews;
+
+
         if (userId != null && userId > 0) {
             reviews = reviewService.getReviewsWithLikeStatus(movieId, userId);
         } else {
@@ -67,7 +70,6 @@ public class ReviewController {
 
         return ResponseEntity.ok(response);
     }
-
 
     @PutMapping("/update")
     public ResponseEntity<String> updateReview(
