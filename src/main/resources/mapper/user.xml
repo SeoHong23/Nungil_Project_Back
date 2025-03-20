@@ -27,6 +27,10 @@
         INSERT INTO users (kakao_id, email, nickname, gender)
         VALUES (#{kakaoId}, #{email}, #{nickname}, #{gender})
     </insert>
-
+    <update id="updateUserPassword">
+        UPDATE users
+        SET password = #{password}
+        WHERE email = #{email}
+    </update>
 
 </mapper>
