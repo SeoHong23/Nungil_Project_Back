@@ -32,5 +32,7 @@
         SET password = #{password}
         WHERE email = #{email}
     </update>
-
+    <select id="findAllUsers" resultType="com.nungil.Dto.UserDTO">
+        SELECT * FROM users
+    </select>
 </mapper>
