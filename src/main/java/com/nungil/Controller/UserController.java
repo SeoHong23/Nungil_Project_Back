@@ -131,4 +131,13 @@ public class UserController {
     }
 
 
+    // 기존 회원 비밀번호 암호화
+    @PostMapping("/encrypt-passwords")
+    public ResponseEntity<Map<String, String>> encryptPasswords() {
+        userService.encryptExistingPasswords();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "기존회원 비밀번호 암호화 완료!");
+        return ResponseEntity.ok(response);
+    }
+
 }

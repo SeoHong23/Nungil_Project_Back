@@ -4,6 +4,8 @@ import com.nungil.Dto.UserDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface UserRepository {
 
@@ -18,5 +20,10 @@ public interface UserRepository {
     UserDTO findByKakaoId(Long kakaoId);
 
     int save(UserDTO user);
+
+    List<UserDTO> findAllUsers();
+
+    void updateUserPassword(@Param("email") String email, @Param("password") String password);
+
 
 }
