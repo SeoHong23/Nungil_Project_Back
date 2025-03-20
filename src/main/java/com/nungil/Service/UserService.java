@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -54,6 +55,25 @@ log.info("Encoded password: " + encodedPwd);
         }
         return false;
     }
+
+
+    public void encryptExistingPasswords() {
+        List<UserDTO> users = userRepository.findAllUsers();
+
+        for (UserDTO user : users) {
+            String oldPassword = user.getPassword();
+
+            if (!oldPassword.startsWith("$2a$")) {
+                String newEncodedPassword = passwordEncoder.encode(oldPassword);
+                user.setPassword(newEncodedPassword);
+                userRepository.updateUserPassword(user.getEmail(), newEncodedPassword);
+                System.out.println("비밀번호 암호화 업데이트" + user.getEmail());
+            } else {
+                System.out.println("이미 암호화되었습니다" + user.getEmail());
+            }
+        }
+    }
+
 
     public UserDTO findUserByEmail(String email) {
         UserDTO user = userRepository.findByEmail(email);
